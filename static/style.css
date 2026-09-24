@@ -15,14 +15,20 @@ h1 {
 }
 
 .queue-card,
-.token-card {
+.token-card,
+.admin-card,
+.current-card {
     background-color: white;
-    width: 350px;
+    width: 500px;
+    max-width: 90%;
     margin: 30px auto;
     padding: 30px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
+
+
+/* USER PAGE */
 
 .queue-card h2,
 .token-card h2 {
@@ -51,6 +57,10 @@ button {
     font-size: 16px;
 }
 
+button:hover {
+    opacity: 0.85;
+}
+
 .token {
     font-size: 40px;
     font-weight: bold;
@@ -61,4 +71,39 @@ button {
     font-size: 30px;
     font-weight: bold;
     margin: 10px 0;
+}
+
+
+/* ADMIN PAGE */
+
+.current-card {
+    padding: 35px;
+}
+
+.current-token {
+    font-size: 55px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.next-button {
+    font-size: 18px;
+    padding: 15px 40px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th,
+td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+th {
+    font-weight: bold;
 }

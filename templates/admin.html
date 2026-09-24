@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Dashboard</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Admin Dashboard</h1>
+
+        <p>Queue Management</p>
+
+
+        <!-- CURRENT TOKEN -->
+
+        <div class="current-card">
+
+            <h2>Currently Serving</h2>
+
+            {% if current %}
+
+                <div class="current-token">
+                    {{ current["token"] }}
+                </div>
+
+                <p>
+                    Serving: <strong>{{ current["name"] }}</strong>
+                </p>
+
+            {% else %}
+
+                <div class="current-token">
+                    ---
+                </div>
+
+                <p>No one is currently being served.</p>
+
+            {% endif %}
+
+        </div>
+
+
+        <!-- CALL NEXT BUTTON -->
+
+        <div class="admin-card">
+
+            <form action="/admin/next" method="POST">
+
+                <button
+                    type="submit"
+                    class="next-button"
+                >
+                    CALL NEXT
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- QUEUE TABLE -->
+
+        <div class="admin-card">
+
+            <h2>Queue</h2>
+
+            {% if queue %}
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Token</th>
+                        <th>Name</th>
+                        <th>Status</th>
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for person in queue %}
+
+                    <tr>
+
+                        <td>
+                            {{ person["token"] }}
+                        </td>
+
+                        <td>
+                            {{ person["name"] }}
+                        </td>
+
+                        <td>
+                            {{ person["status"] }}
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+            {% else %}
+
+            <p>No one is currently in the queue.</p>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
