@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
+import os
 
 app = Flask(__name__)
 
@@ -11,15 +12,17 @@ app.secret_key = "smart_queue_secret_key"
 # DATABASE
 # =========================================
 
-DATABASE = "database/queue.db"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATABASE_DIR = os.path.join(BASE_DIR, "database")
+DATABASE = os.path.join(DATABASE_DIR, "queue.db")
+
+# Make sure the database directory exists
+os.makedirs(DATABASE_DIR, exist_ok=True)
 
 
 def get_db_connection():
-
     connection = sqlite3.connect(DATABASE)
-
     connection.row_factory = sqlite3.Row
-
     return connection
 
 
@@ -29,7 +32,6 @@ def get_db_connection():
 
 @app.route("/")
 def home():
-
     return render_template("index.html")
 
 
@@ -43,7 +45,6 @@ def join_queue():
     name = request.form.get("name")
 
     if not name or not name.strip():
-
         return render_template(
             "index.html",
             error="Please enter your name."
@@ -73,11 +74,9 @@ def join_queue():
             )
 
         except ValueError:
-
             last_number = 0
 
     else:
-
         last_number = 0
 
     new_number = last_number + 1
@@ -94,7 +93,6 @@ def join_queue():
     )
 
     connection.commit()
-
     connection.close()
 
     return redirect(
@@ -124,11 +122,8 @@ def queue_status(token):
     ).fetchone()
 
     if not person:
-
         connection.close()
-
         return "Token not found", 404
-
 
     # Count people ahead
     people_ahead = connection.execute(
@@ -141,16 +136,13 @@ def queue_status(token):
         (person["id"],)
     ).fetchone()[0]
 
-
     # Average service time in minutes
     average_service_time = 5
-
 
     # Estimated waiting time
     estimated_wait = (
         people_ahead * average_service_time
     )
-
 
     # Currently serving
     current = connection.execute(
@@ -163,9 +155,7 @@ def queue_status(token):
         """
     ).fetchone()
 
-
     connection.close()
-
 
     return render_template(
         "status.html",
@@ -186,9 +176,7 @@ def admin_login():
     if request.method == "POST":
 
         username = request.form.get("username")
-
         password = request.form.get("password")
-
 
         if username == "admin" and password == "admin123":
 
@@ -198,12 +186,10 @@ def admin_login():
                 url_for("admin")
             )
 
-
         return render_template(
             "admin_login.html",
             error="Invalid username or password."
         )
-
 
     return render_template(
         "admin_login.html"
@@ -218,14 +204,11 @@ def admin_login():
 def admin():
 
     if not session.get("admin_logged_in"):
-
         return redirect(
             url_for("admin_login")
         )
 
-
     connection = get_db_connection()
-
 
     # Get complete queue
     queue = connection.execute(
@@ -235,7 +218,6 @@ def admin():
         ORDER BY id ASC
         """
     ).fetchall()
-
 
     # Currently serving
     current = connection.execute(
@@ -248,7 +230,6 @@ def admin():
         """
     ).fetchone()
 
-
     # Total people
     total_people = connection.execute(
         """
@@ -256,7 +237,6 @@ def admin():
         FROM queue
         """
     ).fetchone()[0]
-
 
     # Waiting people
     waiting_people = connection.execute(
@@ -267,7 +247,6 @@ def admin():
         """
     ).fetchone()[0]
 
-
     # Serving people
     serving_people = connection.execute(
         """
@@ -276,7 +255,6 @@ def admin():
         WHERE status = 'Serving'
         """
     ).fetchone()[0]
-
 
     # Served people
     served_people = connection.execute(
@@ -287,9 +265,7 @@ def admin():
         """
     ).fetchone()[0]
 
-
     connection.close()
-
 
     return render_template(
         "admin.html",
@@ -310,14 +286,11 @@ def admin():
 def admin_next():
 
     if not session.get("admin_logged_in"):
-
         return redirect(
             url_for("admin_login")
         )
 
-
     connection = get_db_connection()
-
 
     # Mark currently serving person as served
     connection.execute(
@@ -327,7 +300,6 @@ def admin_next():
         WHERE status = 'Serving'
         """
     )
-
 
     # Find next waiting person
     next_person = connection.execute(
@@ -339,7 +311,6 @@ def admin_next():
         LIMIT 1
         """
     ).fetchone()
-
 
     # Make next person the serving person
     if next_person:
@@ -353,11 +324,8 @@ def admin_next():
             (next_person["id"],)
         )
 
-
     connection.commit()
-
     connection.close()
-
 
     return redirect(
         url_for("admin")
@@ -399,7 +367,6 @@ def display_status():
 
     connection = get_db_connection()
 
-
     # Currently serving
     current = connection.execute(
         """
@@ -411,7 +378,6 @@ def display_status():
         """
     ).fetchone()
 
-
     # Number of people waiting
     waiting_count = connection.execute(
         """
@@ -421,9 +387,7 @@ def display_status():
         """
     ).fetchone()[0]
 
-
     connection.close()
-
 
     return jsonify({
 
@@ -439,7 +403,6 @@ def display_status():
 
         "waiting_count":
             waiting_count
-
     })
 
 
@@ -451,14 +414,11 @@ def display_status():
 def admin_history():
 
     if not session.get("admin_logged_in"):
-
         return redirect(
             url_for("admin_login")
         )
 
-
     connection = get_db_connection()
-
 
     history = connection.execute(
         """
@@ -469,9 +429,7 @@ def admin_history():
         """
     ).fetchall()
 
-
     connection.close()
-
 
     return render_template(
         "history.html",
@@ -488,7 +446,6 @@ def cancel_queue(token):
 
     connection = get_db_connection()
 
-
     person = connection.execute(
         """
         SELECT *
@@ -498,13 +455,9 @@ def cancel_queue(token):
         (token,)
     ).fetchone()
 
-
     if not person:
-
         connection.close()
-
         return "Token not found", 404
-
 
     # Only waiting users can cancel
     if person["status"] == "Waiting":
@@ -520,9 +473,7 @@ def cancel_queue(token):
 
         connection.commit()
 
-
     connection.close()
-
 
     return redirect(
         url_for(
@@ -538,6 +489,10 @@ def cancel_queue(token):
 
 if __name__ == "__main__":
 
+    port = int(os.environ.get("PORT", 5000))
+
     app.run(
-        debug=True
+        host="0.0.0.0",
+        port=port,
+        debug=False
     )
