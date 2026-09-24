@@ -977,3 +977,22 @@ td {
     color: #6b7280;
     font-size: 14px;
 }
+/* =========================================
+   CANCEL QUEUE
+   ========================================= */
+
+.cancel-button {
+    margin-top: 20px;
+    padding: 11px 20px;
+    border: 1px solid #dc2626;
+    border-radius: 8px;
+    background: white;
+    color: #dc2626;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.cancel-button:hover {
+    background: #fef2f2;
+}

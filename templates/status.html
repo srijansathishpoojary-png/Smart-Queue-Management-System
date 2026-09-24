@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Queue Status</title>
+    <title>Queue Status - SmartQueue</title>
 
     <link
         rel="stylesheet"
@@ -21,189 +21,221 @@
 
 <body>
 
-    <div class="container">
+    <div class="status-page">
 
-        <h1>Queue Status</h1>
+        <!-- HEADER -->
 
-        <div class="status-card">
+        <header class="status-header">
+
+            <div class="status-logo">
+                Smart<span>Queue</span>
+            </div>
+
+            <a
+                href="/"
+                class="back-home"
+            >
+                Home
+            </a>
+
+        </header>
+
+
+        <!-- MAIN -->
+
+        <main class="status-main">
+
+            <div class="status-card">
+
+                <p class="status-label">
+                    YOUR QUEUE TOKEN
+                </p>
+
+
+                <div class="status-token">
+                    {{ person["token"] }}
+                </div>
+
+
+                <h1>
+                    {{ person["name"] }}
+                </h1>
+
+
+                <!-- WAITING -->
+
+                {% if person["status"] == "Waiting" %}
+
+                    <div class="status-badge waiting">
+                        Waiting
+                    </div>
+
+
+                    <div class="queue-info">
+
+                        <div class="queue-info-item">
+
+                            <span>
+                                People ahead
+                            </span>
+
+                            <strong>
+                                {{ people_ahead }}
+                            </strong>
+
+                        </div>
+
+
+                        {% if current %}
+
+                            <div class="queue-info-item">
+
+                                <span>
+                                    Currently serving
+                                </span>
+
+                                <strong>
+                                    {{ current["token"] }}
+                                </strong>
+
+                            </div>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <p class="status-message">
+                        Please wait until your token is called.
+                    </p>
+
+
+                    <!-- CANCEL QUEUE -->
+
+                    <form
+                        action="/cancel/{{ person['token'] }}"
+                        method="POST"
+                        onsubmit="return confirm('Are you sure you want to cancel your queue?');"
+                    >
+
+                        <button
+                            type="submit"
+                            class="cancel-button"
+                        >
+                            Cancel Queue
+                        </button>
+
+                    </form>
+
+
+                <!-- SERVING -->
+
+                {% elif person["status"] == "Serving" %}
+
+                    <div class="status-badge serving">
+                        Now Serving
+                    </div>
+
+
+                    <div class="serving-message">
+
+                        <h2>
+                            It's your turn!
+                        </h2>
+
+                        <p>
+                            Please proceed to the service counter.
+                        </p>
+
+                    </div>
+
+
+                <!-- SERVED -->
+
+                {% elif person["status"] == "Served" %}
+
+                    <div class="status-badge served">
+                        Served
+                    </div>
+
+
+                    <div class="serving-message">
+
+                        <h2>
+                            Thank you!
+                        </h2>
+
+                        <p>
+                            Your queue service has been completed.
+                        </p>
+
+                    </div>
+
+
+                <!-- CANCELLED -->
+
+                {% elif person["status"] == "Cancelled" %}
+
+                    <div class="status-badge cancelled">
+                        Cancelled
+                    </div>
+
+
+                    <div class="serving-message">
+
+                        <h2>
+                            Queue Cancelled
+                        </h2>
+
+                        <p>
+                            Your queue request has been cancelled.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+
+                <a
+                    href="/"
+                    class="join-again-button"
+                >
+                    Join Queue Again
+                </a>
+
+            </div>
+
+        </main>
+
+
+        <!-- FOOTER -->
+
+        <footer class="status-footer">
 
             <p>
-                Hello,
-                <strong id="user-name">
-                    {{ person["name"] }}
-                </strong>!
+                Smart Queue Management System
             </p>
 
-            <p>Your Token</p>
-
-            <div class="token">
-                <span id="user-token">
-                    {{ person["token"] }}
-                </span>
-            </div>
-
-
-            <p>Currently Serving</p>
-
-            <div class="current-token-small">
-
-                <span id="current-token">
-
-                    {% if current %}
-                        {{ current["token"] }}
-                    {% else %}
-                        ---
-                    {% endif %}
-
-                </span>
-
-            </div>
-
-
-            <div id="waiting-section">
-
-                <p>People Ahead</p>
-
-                <div class="people-ahead">
-
-                    <span id="people-ahead">
-                        {{ people_ahead }}
-                    </span>
-
-                </div>
-
-                <div class="waiting-message">
-                    Please wait for your turn.
-                </div>
-
-            </div>
-
-
-            <div
-                id="your-turn-section"
-                class="your-turn"
-                style="display: none;"
-            >
-                🎉 IT'S YOUR TURN!
-            </div>
-
-
-            <div
-                id="served-section"
-                class="served-message"
-                style="display: none;"
-            >
-                Your service is complete.
-            </div>
-
-        </div>
+        </footer>
 
     </div>
 
 
-    <script>
+    <!-- AUTO REFRESH -->
 
-        const token = "{{ person['token'] }}";
+    {% if person["status"] == "Waiting" or person["status"] == "Serving" %}
 
+        <script>
 
-        function updateStatus() {
+            setTimeout(function() {
 
-            fetch("/api/status/" + token)
+                window.location.reload();
 
-                .then(response => response.json())
+            }, 5000);
 
-                .then(data => {
+        </script>
 
-                    if (data.error) {
-                        return;
-                    }
-
-
-                    // Update name
-                    document.getElementById(
-                        "user-name"
-                    ).textContent = data.name;
-
-
-                    // Update current token
-                    document.getElementById(
-                        "current-token"
-                    ).textContent =
-                        data.current_token || "---";
-
-
-                    // Waiting
-                    if (data.status === "Waiting") {
-
-                        document.getElementById(
-                            "people-ahead"
-                        ).textContent =
-                            data.people_ahead;
-
-                        document.getElementById(
-                            "waiting-section"
-                        ).style.display = "block";
-
-                        document.getElementById(
-                            "your-turn-section"
-                        ).style.display = "none";
-
-                        document.getElementById(
-                            "served-section"
-                        ).style.display = "none";
-
-                    }
-
-
-                    // Serving
-                    else if (data.status === "Serving") {
-
-                        document.getElementById(
-                            "waiting-section"
-                        ).style.display = "none";
-
-                        document.getElementById(
-                            "your-turn-section"
-                        ).style.display = "block";
-
-                        document.getElementById(
-                            "served-section"
-                        ).style.display = "none";
-
-                    }
-
-
-                    // Served
-                    else if (data.status === "Served") {
-
-                        document.getElementById(
-                            "waiting-section"
-                        ).style.display = "none";
-
-                        document.getElementById(
-                            "your-turn-section"
-                        ).style.display = "none";
-
-                        document.getElementById(
-                            "served-section"
-                        ).style.display = "block";
-
-                    }
-
-                })
-
-                .catch(error => {
-                    console.log(
-                        "Unable to update queue status."
-                    );
-                });
-        }
-
-
-        // Check the queue every 3 seconds
-        setInterval(updateStatus, 3000);
-
-    </script>
+    {% endif %}
 
 </body>
 

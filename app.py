@@ -470,7 +470,52 @@ def admin_history():
         history=history
     )
 
+# =========================================
+# CANCEL QUEUE
+# =========================================
 
+@app.route("/cancel/<token>", methods=["POST"])
+def cancel_queue(token):
+
+    connection = get_db_connection()
+
+    person = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE token = ?
+        """,
+        (token,)
+    ).fetchone()
+
+    if not person:
+
+        connection.close()
+
+        return "Token not found", 404
+
+    # Only waiting users can cancel
+    if person["status"] == "Waiting":
+
+        connection.execute(
+            """
+            UPDATE queue
+            SET status = 'Cancelled'
+            WHERE token = ?
+            """,
+            (token,)
+        )
+
+        connection.commit()
+
+    connection.close()
+
+    return redirect(
+        url_for(
+            "queue_status",
+            token=token
+        )
+    )
 # =========================================
 # RUN APPLICATION
 # =========================================
