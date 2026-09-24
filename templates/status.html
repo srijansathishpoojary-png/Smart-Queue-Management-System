@@ -23,8 +23,6 @@
 
     <div class="status-page">
 
-        <!-- HEADER -->
-
         <header class="status-header">
 
             <div class="status-logo">
@@ -40,8 +38,6 @@
 
         </header>
 
-
-        <!-- MAIN -->
 
         <main class="status-main">
 
@@ -62,8 +58,6 @@
                 </h1>
 
 
-                <!-- WAITING -->
-
                 {% if person["status"] == "Waiting" %}
 
                     <div class="status-badge waiting">
@@ -81,6 +75,19 @@
 
                             <strong>
                                 {{ people_ahead }}
+                            </strong>
+
+                        </div>
+
+
+                        <div class="queue-info-item">
+
+                            <span>
+                                Estimated wait
+                            </span>
+
+                            <strong>
+                                ~{{ estimated_wait }} min
                             </strong>
 
                         </div>
@@ -110,8 +117,6 @@
                     </p>
 
 
-                    <!-- CANCEL QUEUE -->
-
                     <form
                         action="/cancel/{{ person['token'] }}"
                         method="POST"
@@ -127,8 +132,6 @@
 
                     </form>
 
-
-                <!-- SERVING -->
 
                 {% elif person["status"] == "Serving" %}
 
@@ -150,8 +153,6 @@
                     </div>
 
 
-                <!-- SERVED -->
-
                 {% elif person["status"] == "Served" %}
 
                     <div class="status-badge served">
@@ -171,8 +172,6 @@
 
                     </div>
 
-
-                <!-- CANCELLED -->
 
                 {% elif person["status"] == "Cancelled" %}
 
@@ -208,8 +207,6 @@
         </main>
 
 
-        <!-- FOOTER -->
-
         <footer class="status-footer">
 
             <p>
@@ -220,8 +217,6 @@
 
     </div>
 
-
-    <!-- AUTO REFRESH -->
 
     {% if person["status"] == "Waiting" or person["status"] == "Serving" %}
 

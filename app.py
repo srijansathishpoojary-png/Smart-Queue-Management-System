@@ -80,11 +80,9 @@ def join_queue():
 
         last_number = 0
 
-
     new_number = last_number + 1
 
     token = f"A{new_number:03d}"
-
 
     connection.execute(
         """
@@ -98,7 +96,6 @@ def join_queue():
     connection.commit()
 
     connection.close()
-
 
     return redirect(
         url_for(
@@ -126,7 +123,6 @@ def queue_status(token):
         (token,)
     ).fetchone()
 
-
     if not person:
 
         connection.close()
@@ -146,6 +142,17 @@ def queue_status(token):
     ).fetchone()[0]
 
 
+    # Average service time in minutes
+    average_service_time = 5
+
+
+    # Estimated waiting time
+    estimated_wait = (
+        people_ahead * average_service_time
+    )
+
+
+    # Currently serving
     current = connection.execute(
         """
         SELECT *
@@ -164,7 +171,8 @@ def queue_status(token):
         "status.html",
         person=person,
         people_ahead=people_ahead,
-        current=current
+        current=current,
+        estimated_wait=estimated_wait
     )
 
 
@@ -470,6 +478,7 @@ def admin_history():
         history=history
     )
 
+
 # =========================================
 # CANCEL QUEUE
 # =========================================
@@ -478,6 +487,7 @@ def admin_history():
 def cancel_queue(token):
 
     connection = get_db_connection()
+
 
     person = connection.execute(
         """
@@ -488,11 +498,13 @@ def cancel_queue(token):
         (token,)
     ).fetchone()
 
+
     if not person:
 
         connection.close()
 
         return "Token not found", 404
+
 
     # Only waiting users can cancel
     if person["status"] == "Waiting":
@@ -508,7 +520,9 @@ def cancel_queue(token):
 
         connection.commit()
 
+
     connection.close()
+
 
     return redirect(
         url_for(
@@ -516,6 +530,8 @@ def cancel_queue(token):
             token=token
         )
     )
+
+
 # =========================================
 # RUN APPLICATION
 # =========================================
