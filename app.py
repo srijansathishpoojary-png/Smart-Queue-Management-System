@@ -282,14 +282,48 @@ def admin():
         """
     ).fetchone()
 
+    total_people = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        """
+    ).fetchone()[0]
+
+    waiting_people = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Waiting'
+        """
+    ).fetchone()[0]
+
+    serving_people = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Serving'
+        """
+    ).fetchone()[0]
+
+    served_people = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Served'
+        """
+    ).fetchone()[0]
+
     connection.close()
 
     return render_template(
         "admin.html",
         queue=queue,
-        current=current
+        current=current,
+        total_people=total_people,
+        waiting_people=waiting_people,
+        serving_people=serving_people,
+        served_people=served_people
     )
-
 
 # -------------------------
 # ADMIN LOGIN
