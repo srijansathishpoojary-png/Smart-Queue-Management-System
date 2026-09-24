@@ -1,68 +1,60 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
-import os
 
 app = Flask(__name__)
 
-app.secret_key = "smart-queue-secret-key"
+# Secret key for admin login sessions
+app.secret_key = "smart_queue_secret_key"
+
+
+# =========================================
+# DATABASE
+# =========================================
 
 DATABASE = "database/queue.db"
 
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin123"
-
 
 def get_db_connection():
+
     connection = sqlite3.connect(DATABASE)
+
     connection.row_factory = sqlite3.Row
+
     return connection
 
 
-def initialize_database():
-    os.makedirs("database", exist_ok=True)
-
-    connection = get_db_connection()
-
-    connection.execute("""
-        CREATE TABLE IF NOT EXISTS queue (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            token TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'Waiting'
-        )
-    """)
-
-    connection.commit()
-    connection.close()
-
-
-# -------------------------
-# USER HOME PAGE
-# -------------------------
+# =========================================
+# HOME PAGE
+# =========================================
 
 @app.route("/")
 def home():
+
     return render_template("index.html")
 
 
-# -------------------------
+# =========================================
 # JOIN QUEUE
-# -------------------------
+# =========================================
 
 @app.route("/join", methods=["POST"])
 def join_queue():
 
-    name = request.form["name"].strip()
+    name = request.form.get("name")
 
-    if not name:
+    if not name or not name.strip():
+
         return render_template(
             "index.html",
             error="Please enter your name."
         )
 
+    name = name.strip()
+
     connection = get_db_connection()
 
-    last_token = connection.execute(
+    # Get the last token number
+    last_person = connection.execute(
         """
         SELECT token
         FROM queue
@@ -71,70 +63,54 @@ def join_queue():
         """
     ).fetchone()
 
-    if last_token:
-        last_number = int(last_token["token"][1:])
-        token_number = last_number + 1
-    else:
-        token_number = 1
+    if last_person:
 
-    token = f"A{token_number:03d}"
+        last_token = last_person["token"]
+
+        try:
+            last_number = int(
+                last_token.replace("A", "")
+            )
+
+        except ValueError:
+
+            last_number = 0
+
+    else:
+
+        last_number = 0
+
+
+    new_number = last_number + 1
+
+    token = f"A{new_number:03d}"
+
 
     connection.execute(
         """
-        INSERT INTO queue (name, token, status)
+        INSERT INTO queue
+        (token, name, status)
         VALUES (?, ?, ?)
         """,
-        (name, token, "Waiting")
+        (token, name, "Waiting")
     )
 
     connection.commit()
-    connection.close()
-
-    return redirect(url_for("queue_status", token=token))
-# -------------------------
-# PUBLIC QUEUE DISPLAY
-# -------------------------
-
-@app.route("/display")
-def public_display():
-
-    return render_template("display.html")
-
-
-@app.route("/api/display")
-def display_status():
-
-    connection = get_db_connection()
-
-    current = connection.execute(
-        """
-        SELECT token, name
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
-
-    waiting_count = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Waiting'
-        """
-    ).fetchone()[0]
 
     connection.close()
 
-    return jsonify({
-        "current_token": current["token"] if current else None,
-        "current_name": current["name"] if current else None,
-        "waiting_count": waiting_count
-    })
 
-# -------------------------
-# USER QUEUE STATUS PAGE
-# -------------------------
+    return redirect(
+        url_for(
+            "queue_status",
+            token=token
+        )
+    )
+
+
+# =========================================
+# USER QUEUE STATUS
+# =========================================
 
 @app.route("/status/<token>")
 def queue_status(token):
@@ -146,15 +122,29 @@ def queue_status(token):
         SELECT *
         FROM queue
         WHERE token = ?
-        ORDER BY id DESC
-        LIMIT 1
         """,
         (token,)
     ).fetchone()
 
+
     if not person:
+
         connection.close()
+
         return "Token not found", 404
+
+
+    # Count people ahead
+    people_ahead = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Waiting'
+        AND id < ?
+        """,
+        (person["id"],)
+    ).fetchone()[0]
+
 
     current = connection.execute(
         """
@@ -166,104 +156,70 @@ def queue_status(token):
         """
     ).fetchone()
 
-    people_ahead = 0
-
-    if person["status"] == "Waiting":
-
-        people_ahead = connection.execute(
-            """
-            SELECT COUNT(*)
-            FROM queue
-            WHERE status = 'Waiting'
-            AND id < ?
-            """,
-            (person["id"],)
-        ).fetchone()[0]
 
     connection.close()
+
 
     return render_template(
         "status.html",
         person=person,
-        current=current,
-        people_ahead=people_ahead
+        people_ahead=people_ahead,
+        current=current
     )
 
 
-# -------------------------
-# LIVE STATUS API
-# -------------------------
+# =========================================
+# ADMIN LOGIN
+# =========================================
 
-@app.route("/api/status/<token>")
-def live_status(token):
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
 
-    connection = get_db_connection()
+    if request.method == "POST":
 
-    person = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE token = ?
-        ORDER BY id DESC
-        LIMIT 1
-        """,
-        (token,)
-    ).fetchone()
+        username = request.form.get("username")
 
-    if not person:
-        connection.close()
-
-        return jsonify({
-            "error": "Token not found"
-        }), 404
-
-    current = connection.execute(
-        """
-        SELECT token
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
-
-    people_ahead = 0
-
-    if person["status"] == "Waiting":
-
-        people_ahead = connection.execute(
-            """
-            SELECT COUNT(*)
-            FROM queue
-            WHERE status = 'Waiting'
-            AND id < ?
-            """,
-            (person["id"],)
-        ).fetchone()[0]
-
-    connection.close()
-
-    return jsonify({
-        "token": person["token"],
-        "name": person["name"],
-        "status": person["status"],
-        "people_ahead": people_ahead,
-        "current_token": current["token"] if current else None
-    })
+        password = request.form.get("password")
 
 
-# -------------------------
+        if username == "admin" and password == "admin123":
+
+            session["admin_logged_in"] = True
+
+            return redirect(
+                url_for("admin")
+            )
+
+
+        return render_template(
+            "admin_login.html",
+            error="Invalid username or password."
+        )
+
+
+    return render_template(
+        "admin_login.html"
+    )
+
+
+# =========================================
 # ADMIN DASHBOARD
-# -------------------------
+# =========================================
 
 @app.route("/admin")
 def admin():
 
     if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
+
+        return redirect(
+            url_for("admin_login")
+        )
+
 
     connection = get_db_connection()
 
+
+    # Get complete queue
     queue = connection.execute(
         """
         SELECT *
@@ -272,6 +228,8 @@ def admin():
         """
     ).fetchall()
 
+
+    # Currently serving
     current = connection.execute(
         """
         SELECT *
@@ -282,6 +240,8 @@ def admin():
         """
     ).fetchone()
 
+
+    # Total people
     total_people = connection.execute(
         """
         SELECT COUNT(*)
@@ -289,6 +249,8 @@ def admin():
         """
     ).fetchone()[0]
 
+
+    # Waiting people
     waiting_people = connection.execute(
         """
         SELECT COUNT(*)
@@ -297,6 +259,8 @@ def admin():
         """
     ).fetchone()[0]
 
+
+    # Serving people
     serving_people = connection.execute(
         """
         SELECT COUNT(*)
@@ -305,6 +269,8 @@ def admin():
         """
     ).fetchone()[0]
 
+
+    # Served people
     served_people = connection.execute(
         """
         SELECT COUNT(*)
@@ -313,7 +279,9 @@ def admin():
         """
     ).fetchone()[0]
 
+
     connection.close()
+
 
     return render_template(
         "admin.html",
@@ -325,84 +293,38 @@ def admin():
         served_people=served_people
     )
 
-# -------------------------
-# ADMIN LOGIN
-# -------------------------
 
-@app.route("/admin/login", methods=["GET", "POST"])
-def admin_login():
-
-    error = None
-
-    if request.method == "POST":
-
-        username = request.form["username"].strip()
-        password = request.form["password"]
-
-        if (
-            username == ADMIN_USERNAME
-            and password == ADMIN_PASSWORD
-        ):
-            session["admin_logged_in"] = True
-
-            return redirect(url_for("admin"))
-
-        error = "Invalid username or password."
-
-    return render_template(
-        "login.html",
-        error=error
-    )
-
-
-# -------------------------
-# ADMIN LOGOUT
-# -------------------------
-
-@app.route("/admin/logout")
-def admin_logout():
-
-    session.pop("admin_logged_in", None)
-
-    return redirect(url_for("admin_login"))
-
-
-# -------------------------
+# =========================================
 # CALL NEXT
-# -------------------------
+# =========================================
 
 @app.route("/admin/next", methods=["POST"])
-def call_next():
+def admin_next():
 
     if not session.get("admin_logged_in"):
-        return redirect(url_for("admin_login"))
+
+        return redirect(
+            url_for("admin_login")
+        )
+
 
     connection = get_db_connection()
 
-    current = connection.execute(
+
+    # Mark currently serving person as served
+    connection.execute(
         """
-        SELECT *
-        FROM queue
+        UPDATE queue
+        SET status = 'Served'
         WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
         """
-    ).fetchone()
+    )
 
-    if current:
 
-        connection.execute(
-            """
-            UPDATE queue
-            SET status = 'Served'
-            WHERE id = ?
-            """,
-            (current["id"],)
-        )
-
+    # Find next waiting person
     next_person = connection.execute(
         """
-        SELECT *
+        SELECT id
         FROM queue
         WHERE status = 'Waiting'
         ORDER BY id ASC
@@ -410,6 +332,8 @@ def call_next():
         """
     ).fetchone()
 
+
+    # Make next person the serving person
     if next_person:
 
         connection.execute(
@@ -421,16 +345,138 @@ def call_next():
             (next_person["id"],)
         )
 
+
     connection.commit()
+
     connection.close()
 
-    return redirect(url_for("admin"))
+
+    return redirect(
+        url_for("admin")
+    )
 
 
-# -------------------------
+# =========================================
+# ADMIN LOGOUT
+# =========================================
+
+@app.route("/admin/logout")
+def admin_logout():
+
+    session.clear()
+
+    return redirect(
+        url_for("admin_login")
+    )
+
+
+# =========================================
+# PUBLIC QUEUE DISPLAY
+# =========================================
+
+@app.route("/display")
+def public_display():
+
+    return render_template(
+        "display.html"
+    )
+
+
+# =========================================
+# PUBLIC DISPLAY API
+# =========================================
+
+@app.route("/api/display")
+def display_status():
+
+    connection = get_db_connection()
+
+
+    # Currently serving
+    current = connection.execute(
+        """
+        SELECT token, name
+        FROM queue
+        WHERE status = 'Serving'
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    ).fetchone()
+
+
+    # Number of people waiting
+    waiting_count = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Waiting'
+        """
+    ).fetchone()[0]
+
+
+    connection.close()
+
+
+    return jsonify({
+
+        "current_token":
+            current["token"]
+            if current
+            else None,
+
+        "current_name":
+            current["name"]
+            if current
+            else None,
+
+        "waiting_count":
+            waiting_count
+
+    })
+
+
+# =========================================
+# QUEUE HISTORY
+# =========================================
+
+@app.route("/admin/history")
+def admin_history():
+
+    if not session.get("admin_logged_in"):
+
+        return redirect(
+            url_for("admin_login")
+        )
+
+
+    connection = get_db_connection()
+
+
+    history = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE status = 'Served'
+        ORDER BY id DESC
+        """
+    ).fetchall()
+
+
+    connection.close()
+
+
+    return render_template(
+        "history.html",
+        history=history
+    )
+
+
+# =========================================
 # RUN APPLICATION
-# -------------------------
+# =========================================
 
 if __name__ == "__main__":
-    initialize_database()
-    app.run(debug=True)
+
+    app.run(
+        debug=True
+    )
