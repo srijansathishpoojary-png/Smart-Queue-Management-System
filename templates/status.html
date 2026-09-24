@@ -27,60 +27,183 @@
 
         <div class="status-card">
 
-            <p>Hello, <strong>{{ person["name"] }}</strong>!</p>
+            <p>
+                Hello,
+                <strong id="user-name">
+                    {{ person["name"] }}
+                </strong>!
+            </p>
 
             <p>Your Token</p>
 
             <div class="token">
-                {{ person["token"] }}
+                <span id="user-token">
+                    {{ person["token"] }}
+                </span>
             </div>
+
 
             <p>Currently Serving</p>
 
-            {% if current %}
+            <div class="current-token-small">
 
-                <div class="current-token-small">
-                    {{ current["token"] }}
-                </div>
+                <span id="current-token">
 
-            {% else %}
+                    {% if current %}
+                        {{ current["token"] }}
+                    {% else %}
+                        ---
+                    {% endif %}
 
-                <div class="current-token-small">
-                    ---
-                </div>
+                </span>
 
-            {% endif %}
+            </div>
 
 
-            {% if person["status"] == "Waiting" %}
+            <div id="waiting-section">
 
                 <p>People Ahead</p>
 
                 <div class="people-ahead">
-                    {{ people_ahead }}
+
+                    <span id="people-ahead">
+                        {{ people_ahead }}
+                    </span>
+
                 </div>
 
                 <div class="waiting-message">
                     Please wait for your turn.
                 </div>
 
-            {% elif person["status"] == "Serving" %}
+            </div>
 
-                <div class="your-turn">
-                    🎉 IT'S YOUR TURN!
-                </div>
 
-            {% elif person["status"] == "Served" %}
+            <div
+                id="your-turn-section"
+                class="your-turn"
+                style="display: none;"
+            >
+                🎉 IT'S YOUR TURN!
+            </div>
 
-                <div class="served-message">
-                    Your service is complete.
-                </div>
 
-            {% endif %}
+            <div
+                id="served-section"
+                class="served-message"
+                style="display: none;"
+            >
+                Your service is complete.
+            </div>
 
         </div>
 
     </div>
+
+
+    <script>
+
+        const token = "{{ person['token'] }}";
+
+
+        function updateStatus() {
+
+            fetch("/api/status/" + token)
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    if (data.error) {
+                        return;
+                    }
+
+
+                    // Update name
+                    document.getElementById(
+                        "user-name"
+                    ).textContent = data.name;
+
+
+                    // Update current token
+                    document.getElementById(
+                        "current-token"
+                    ).textContent =
+                        data.current_token || "---";
+
+
+                    // Waiting
+                    if (data.status === "Waiting") {
+
+                        document.getElementById(
+                            "people-ahead"
+                        ).textContent =
+                            data.people_ahead;
+
+                        document.getElementById(
+                            "waiting-section"
+                        ).style.display = "block";
+
+                        document.getElementById(
+                            "your-turn-section"
+                        ).style.display = "none";
+
+                        document.getElementById(
+                            "served-section"
+                        ).style.display = "none";
+
+                    }
+
+
+                    // Serving
+                    else if (data.status === "Serving") {
+
+                        document.getElementById(
+                            "waiting-section"
+                        ).style.display = "none";
+
+                        document.getElementById(
+                            "your-turn-section"
+                        ).style.display = "block";
+
+                        document.getElementById(
+                            "served-section"
+                        ).style.display = "none";
+
+                    }
+
+
+                    // Served
+                    else if (data.status === "Served") {
+
+                        document.getElementById(
+                            "waiting-section"
+                        ).style.display = "none";
+
+                        document.getElementById(
+                            "your-turn-section"
+                        ).style.display = "none";
+
+                        document.getElementById(
+                            "served-section"
+                        ).style.display = "block";
+
+                    }
+
+                })
+
+                .catch(error => {
+                    console.log(
+                        "Unable to update queue status."
+                    );
+                });
+        }
+
+
+        // Check the queue every 3 seconds
+        setInterval(updateStatus, 3000);
+
+    </script>
 
 </body>
 

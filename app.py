@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
 import sqlite3
 import os
 
@@ -62,7 +62,6 @@ def join_queue():
 
     connection = get_db_connection()
 
-    # Find the last token created
     last_token = connection.execute(
         """
         SELECT token
@@ -80,7 +79,6 @@ def join_queue():
 
     token = f"A{token_number:03d}"
 
-    # Add the user to the queue
     connection.execute(
         """
         INSERT INTO queue (name, token, status)
@@ -92,14 +90,11 @@ def join_queue():
     connection.commit()
     connection.close()
 
-    # IMPORTANT:
-    # Redirect instead of rendering the page directly.
-    # This prevents refresh from submitting the form again.
     return redirect(url_for("queue_status", token=token))
 
 
 # -------------------------
-# USER QUEUE STATUS
+# USER QUEUE STATUS PAGE
 # -------------------------
 
 @app.route("/status/<token>")
@@ -154,6 +149,68 @@ def queue_status(token):
         current=current,
         people_ahead=people_ahead
     )
+
+
+# -------------------------
+# LIVE STATUS API
+# -------------------------
+
+@app.route("/api/status/<token>")
+def live_status(token):
+
+    connection = get_db_connection()
+
+    person = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE token = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (token,)
+    ).fetchone()
+
+    if not person:
+        connection.close()
+
+        return jsonify({
+            "error": "Token not found"
+        }), 404
+
+    current = connection.execute(
+        """
+        SELECT token
+        FROM queue
+        WHERE status = 'Serving'
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    people_ahead = 0
+
+    if person["status"] == "Waiting":
+
+        people_ahead = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM queue
+            WHERE status = 'Waiting'
+            AND id < ?
+            """,
+            (person["id"],)
+        ).fetchone()[0]
+
+    connection.close()
+
+    return jsonify({
+        "token": person["token"],
+        "name": person["name"],
+        "status": person["status"],
+        "people_ahead": people_ahead,
+        "current_token": current["token"] if current else None
+    })
 
 
 # -------------------------
@@ -249,7 +306,6 @@ def call_next():
 
     connection = get_db_connection()
 
-    # Find current serving person
     current = connection.execute(
         """
         SELECT *
@@ -260,7 +316,6 @@ def call_next():
         """
     ).fetchone()
 
-    # Mark current person as served
     if current:
 
         connection.execute(
@@ -272,7 +327,6 @@ def call_next():
             (current["id"],)
         )
 
-    # Find next waiting person
     next_person = connection.execute(
         """
         SELECT *
@@ -283,7 +337,6 @@ def call_next():
         """
     ).fetchone()
 
-    # Mark next person as serving
     if next_person:
 
         connection.execute(
@@ -298,7 +351,6 @@ def call_next():
     connection.commit()
     connection.close()
 
-    # Redirect instead of rendering directly.
     return redirect(url_for("admin"))
 
 
