@@ -4,12 +4,10 @@ import os
 
 app = Flask(__name__)
 
-# Secret key used for login sessions
 app.secret_key = "smart-queue-secret-key"
 
 DATABASE = "database/queue.db"
 
-# Demo admin credentials
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin123"
 
@@ -64,7 +62,6 @@ def join_queue():
 
     connection = get_db_connection()
 
-    # Find the last token created
     last_token = connection.execute(
         """
         SELECT token
@@ -82,8 +79,7 @@ def join_queue():
 
     token = f"A{token_number:03d}"
 
-    # Add user to queue
-    connection.execute(
+    cursor = connection.execute(
         """
         INSERT INTO queue (name, token, status)
         VALUES (?, ?, ?)
@@ -91,24 +87,29 @@ def join_queue():
         (name, token, "Waiting")
     )
 
+    user_id = cursor.lastrowid
+
     connection.commit()
 
-    # Calculate people ahead
     people_ahead = connection.execute(
         """
         SELECT COUNT(*)
         FROM queue
         WHERE status = 'Waiting'
-        AND id < (
-            SELECT id
-            FROM queue
-            WHERE token = ?
-            ORDER BY id DESC
-            LIMIT 1
-        )
+        AND id < ?
         """,
-        (token,)
+        (user_id,)
     ).fetchone()[0]
+
+    current = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE status = 'Serving'
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    ).fetchone()
 
     connection.close()
 
@@ -116,6 +117,64 @@ def join_queue():
         "index.html",
         token=token,
         name=name,
+        people_ahead=people_ahead,
+        current=current
+    )
+
+
+# -------------------------
+# USER QUEUE STATUS
+# -------------------------
+
+@app.route("/status/<token>")
+def queue_status(token):
+
+    connection = get_db_connection()
+
+    person = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE token = ?
+        ORDER BY id DESC
+        LIMIT 1
+        """,
+        (token,)
+    ).fetchone()
+
+    current = connection.execute(
+        """
+        SELECT *
+        FROM queue
+        WHERE status = 'Serving'
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    people_ahead = 0
+
+    if person and person["status"] == "Waiting":
+
+        people_ahead = connection.execute(
+            """
+            SELECT COUNT(*)
+            FROM queue
+            WHERE status = 'Waiting'
+            AND id < ?
+            """,
+            (person["id"],)
+        ).fetchone()[0]
+
+    connection.close()
+
+    if not person:
+        return "Token not found", 404
+
+    return render_template(
+        "status.html",
+        person=person,
+        current=current,
         people_ahead=people_ahead
     )
 
@@ -127,7 +186,6 @@ def join_queue():
 @app.route("/admin")
 def admin():
 
-    # If not logged in, show login page
     if not session.get("admin_logged_in"):
         return redirect(url_for("admin_login"))
 
@@ -209,13 +267,11 @@ def admin_logout():
 @app.route("/admin/next", methods=["POST"])
 def call_next():
 
-    # Prevent unauthorized access
     if not session.get("admin_logged_in"):
         return redirect(url_for("admin_login"))
 
     connection = get_db_connection()
 
-    # Find current serving person
     current = connection.execute(
         """
         SELECT *
@@ -226,7 +282,6 @@ def call_next():
         """
     ).fetchone()
 
-    # Mark current person as served
     if current:
 
         connection.execute(
@@ -238,7 +293,6 @@ def call_next():
             (current["id"],)
         )
 
-    # Find next waiting person
     next_person = connection.execute(
         """
         SELECT *
@@ -249,7 +303,6 @@ def call_next():
         """
     ).fetchone()
 
-    # Mark next person as serving
     if next_person:
 
         connection.execute(
@@ -263,7 +316,6 @@ def call_next():
 
     connection.commit()
 
-    # Get updated queue
     queue = connection.execute(
         """
         SELECT *
@@ -272,7 +324,6 @@ def call_next():
         """
     ).fetchall()
 
-    # Get current serving person
     current = connection.execute(
         """
         SELECT *
@@ -291,10 +342,6 @@ def call_next():
         current=current
     )
 
-
-# -------------------------
-# RUN APPLICATION
-# -------------------------
 
 if __name__ == "__main__":
     initialize_database()

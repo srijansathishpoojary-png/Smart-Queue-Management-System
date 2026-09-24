@@ -2,12 +2,21 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Smart Queue Management System</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
 </head>
 
 <body>
@@ -18,13 +27,27 @@
 
         <p>Join the queue without waiting in line.</p>
 
+
         <div class="queue-card">
 
             <h2>Join Queue</h2>
 
-            <form action="/join" method="POST">
+            {% if error %}
 
-                <label for="name">Enter your name</label>
+                <div class="error-message">
+                    {{ error }}
+                </div>
+
+            {% endif %}
+
+            <form
+                action="/join"
+                method="POST"
+            >
+
+                <label for="name">
+                    Enter your name
+                </label>
 
                 <input
                     type="text"
@@ -35,7 +58,7 @@
                 >
 
                 <button type="submit">
-                    Join Queue
+                    JOIN QUEUE
                 </button>
 
             </form>
@@ -49,21 +72,31 @@
 
             <h2>Queue Joined Successfully!</h2>
 
-            <p>Hello, {{ name }}!</p>
+            <p>
+                Hello,
+                <strong>{{ name }}</strong>
+            </p>
 
-            <p>Your Token Number:</p>
+            <p>Your Token Number</p>
 
             <div class="token">
                 {{ token }}
             </div>
 
-            <p>People Ahead:</p>
+            <p>People Ahead</p>
 
             <div class="people-ahead">
                 {{ people_ahead }}
             </div>
 
-            <p>Please wait for your token to be called.</p>
+            <p>Please wait for your turn.</p>
+
+            <a
+                href="/status/{{ token }}"
+                class="status-link"
+            >
+                VIEW QUEUE STATUS
+            </a>
 
         </div>
 

@@ -18,7 +18,8 @@ h1 {
 .token-card,
 .admin-card,
 .current-card,
-.login-card {
+.login-card,
+.status-card {
     background-color: white;
     width: 500px;
     max-width: 90%;
@@ -30,11 +31,6 @@ h1 {
 
 
 /* USER PAGE */
-
-.queue-card h2,
-.token-card h2 {
-    margin-bottom: 20px;
-}
 
 label {
     display: block;
@@ -73,6 +69,42 @@ button:hover {
     font-size: 30px;
     font-weight: bold;
     margin: 10px 0;
+}
+
+.status-link {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+
+/* STATUS PAGE */
+
+.status-card {
+    padding: 35px;
+}
+
+.current-token-small {
+    font-size: 35px;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.waiting-message {
+    margin-top: 20px;
+}
+
+.your-turn {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 25px;
+}
+
+.served-message {
+    font-size: 20px;
+    margin-top: 25px;
 }
 
 
@@ -117,17 +149,12 @@ th {
     width: 350px;
 }
 
-.login-card h1 {
-    margin-bottom: 10px;
-}
-
 .login-button {
     margin-top: 10px;
     width: 90%;
 }
 
 .error-message {
-    background-color: #ffe5e5;
     padding: 10px;
     margin: 15px 0;
     border-radius: 5px;

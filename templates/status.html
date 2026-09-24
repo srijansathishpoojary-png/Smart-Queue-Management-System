@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Queue Status</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Queue Status</h1>
+
+        <div class="status-card">
+
+            <p>Hello, <strong>{{ person["name"] }}</strong>!</p>
+
+            <p>Your Token</p>
+
+            <div class="token">
+                {{ person["token"] }}
+            </div>
+
+            <p>Currently Serving</p>
+
+            {% if current %}
+
+                <div class="current-token-small">
+                    {{ current["token"] }}
+                </div>
+
+            {% else %}
+
+                <div class="current-token-small">
+                    ---
+                </div>
+
+            {% endif %}
+
+
+            {% if person["status"] == "Waiting" %}
+
+                <p>People Ahead</p>
+
+                <div class="people-ahead">
+                    {{ people_ahead }}
+                </div>
+
+                <div class="waiting-message">
+                    Please wait for your turn.
+                </div>
+
+            {% elif person["status"] == "Serving" %}
+
+                <div class="your-turn">
+                    🎉 IT'S YOUR TURN!
+                </div>
+
+            {% elif person["status"] == "Served" %}
+
+                <div class="served-message">
+                    Your service is complete.
+                </div>
+
+            {% endif %}
+
+        </div>
+
+    </div>
+
+</body>
+
+</html>
