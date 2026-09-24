@@ -7,14 +7,15 @@ body {
 
 .container {
     text-align: center;
-    margin-top: 80px;
+    margin-top: 60px;
 }
 
 h1 {
     margin-bottom: 10px;
 }
 
-.queue-card {
+.queue-card,
+.token-card {
     background-color: white;
     width: 350px;
     margin: 30px auto;
@@ -23,7 +24,8 @@ h1 {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.queue-card h2 {
+.queue-card h2,
+.token-card h2 {
     margin-bottom: 20px;
 }
 
@@ -46,4 +48,10 @@ button {
     border-radius: 5px;
     cursor: pointer;
     font-size: 16px;
+}
+
+.token {
+    font-size: 40px;
+    font-weight: bold;
+    margin: 20px 0;
 }

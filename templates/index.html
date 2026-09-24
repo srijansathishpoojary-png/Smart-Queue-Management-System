@@ -22,7 +22,8 @@
 
             <h2>Join Queue</h2>
 
-            <form>
+            <form action="/join" method="POST">
+
                 <label for="name">Enter your name</label>
 
                 <input
@@ -36,9 +37,31 @@
                 <button type="submit">
                     Join Queue
                 </button>
+
             </form>
 
         </div>
+
+
+        {% if token %}
+
+        <div class="token-card">
+
+            <h2>Queue Joined Successfully!</h2>
+
+            <p>Hello, {{ name }}!</p>
+
+            <p>Your Token Number:</p>
+
+            <div class="token">
+                {{ token }}
+            </div>
+
+            <p>Please wait for your token to be called.</p>
+
+        </div>
+
+        {% endif %}
 
     </div>
 
