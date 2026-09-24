@@ -836,3 +836,43 @@ td {
     }
 
 }
+/* =========================================
+   ADMIN ACTIONS
+   ========================================= */
+
+.admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-link {
+    text-decoration: none;
+    padding: 10px 18px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.dashboard-link:hover {
+    background: #f9fafb;
+}
+
+
+/* HISTORY MOBILE */
+
+@media (max-width: 800px) {
+
+    .admin-actions {
+        gap: 6px;
+    }
+
+    .dashboard-link,
+    .logout-button {
+        padding: 8px 12px;
+        font-size: 12px;
+    }
+
+}

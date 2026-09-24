@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Queue History - SmartQueue</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="admin-page">
+
+        <header class="admin-header">
+
+            <div>
+
+                <div class="admin-logo">
+                    Smart<span>Queue</span>
+                </div>
+
+                <p class="admin-subtitle">
+                    Queue History
+                </p>
+
+            </div>
+
+            <a
+                href="/admin"
+                class="logout-button"
+            >
+                Dashboard
+            </a>
+
+        </header>
+
+
+        <main class="admin-main">
+
+            <div class="dashboard-title">
+
+                <h1>
+                    Queue History
+                </h1>
+
+                <p>
+                    Previously served visitors.
+                </p>
+
+            </div>
+
+
+            <section class="queue-section">
+
+                {% if history %}
+
+                    <div class="table-container">
+
+                        <table>
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        TOKEN
+                                    </th>
+
+                                    <th>
+                                        NAME
+                                    </th>
+
+                                    <th>
+                                        STATUS
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+                            <tbody>
+
+                                {% for person in history %}
+
+                                    <tr>
+
+                                        <td class="token-cell">
+                                            {{ person["token"] }}
+                                        </td>
+
+                                        <td>
+                                            {{ person["name"] }}
+                                        </td>
+
+                                        <td>
+
+                                            <span class="status-badge served">
+                                                Served
+                                            </span>
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-queue">
+
+                        <div class="empty-icon">
+                            —
+                        </div>
+
+                        <h3>
+                            No history yet
+                        </h3>
+
+                        <p>
+                            Served visitors will appear here.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </main>
+
+
+        <footer class="admin-footer">
+
+            <p>
+                Smart Queue Management System
+            </p>
+
+            <p>
+                Queue History
+            </p>
+
+        </footer>
+
+    </div>
+
+</body>
+
+</html>
