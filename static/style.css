@@ -1,129 +1,315 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f6f8;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    text-align: center;
-    margin-top: 60px;
-}
-
-h1 {
-    margin-bottom: 10px;
-}
-
-.queue-card,
-.token-card,
-.admin-card,
-.current-card,
-.login-card,
-.status-card {
-    background-color: white;
-    width: 500px;
-    max-width: 90%;
-    margin: 30px auto;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-
-/* USER PAGE */
-
-label {
-    display: block;
-    margin-bottom: 8px;
-    margin-top: 15px;
-}
-
-input {
-    width: 90%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+* {
     box-sizing: border-box;
 }
 
-button {
-    padding: 12px 25px;
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f5f7fb;
+    color: #1f2937;
+}
+
+
+/* PAGE */
+
+.page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* HEADER */
+
+.header {
+    width: 100%;
+    padding: 22px 7%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.logo span {
+    font-weight: 400;
+}
+
+.header-text {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+
+/* HERO */
+
+.hero {
+    width: 86%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 70px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 70px;
+}
+
+.hero-content {
+    flex: 1;
+    max-width: 600px;
+}
+
+.badge {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 20px;
+    background: #e8eefc;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 20px;
+}
+
+.hero h1 {
+    font-size: 58px;
+    line-height: 1.05;
+    margin: 0 0 25px;
+    letter-spacing: -2px;
+}
+
+.hero h1 span {
+    font-weight: 400;
+}
+
+.hero-description {
+    font-size: 18px;
+    line-height: 1.7;
+    color: #6b7280;
+    max-width: 520px;
+    margin-bottom: 35px;
+}
+
+
+/* QUEUE CARD */
+
+.queue-card {
+    background: white;
+    width: 100%;
+    max-width: 500px;
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.06);
+}
+
+.queue-card h2 {
+    margin: 0 0 8px;
+    font-size: 24px;
+}
+
+.card-description {
+    margin: 0 0 25px;
+    color: #6b7280;
+}
+
+label {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    margin-bottom: 18px;
+}
+
+input:focus {
+    border-color: #4f46e5;
+}
+
+.primary-button {
+    width: 100%;
+    padding: 15px;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    background: #111827;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.primary-button:hover {
+    opacity: 0.9;
+}
+
+
+/* INFORMATION PANEL */
+
+.info-panel {
+    width: 360px;
+}
+
+.info-card {
+    background: white;
+    padding: 24px;
+    margin-bottom: 15px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.info-icon {
+    min-width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #f0f1f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.info-card h3 {
+    margin: 0 0 7px;
     font-size: 16px;
 }
 
-button:hover {
-    opacity: 0.85;
+.info-card p {
+    margin: 0;
+    color: #6b7280;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* ERROR */
+
+.error-message {
+    padding: 12px;
+    margin-bottom: 18px;
+    border-radius: 8px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-size: 14px;
+}
+
+
+/* FOOTER */
+
+footer {
+    padding: 25px 7%;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+footer p {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+footer a {
+    text-decoration: none;
+    font-size: 13px;
+    color: #374151;
+}
+
+
+/* TOKEN / STATUS PAGES */
+
+.container {
+    width: 90%;
+    max-width: 1000px;
+    margin: 60px auto;
+    text-align: center;
+}
+
+.status-card,
+.token-card,
+.admin-card,
+.current-card,
+.login-card {
+    background: white;
+    width: 500px;
+    max-width: 100%;
+    margin: 25px auto;
+    padding: 32px;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
 }
 
 .token {
-    font-size: 40px;
-    font-weight: bold;
+    font-size: 48px;
+    font-weight: 800;
     margin: 15px 0;
 }
 
 .people-ahead {
-    font-size: 30px;
-    font-weight: bold;
-    margin: 10px 0;
-}
-
-.status-link {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 12px 20px;
-    text-decoration: none;
-    border-radius: 5px;
-}
-
-
-/* STATUS PAGE */
-
-.status-card {
-    padding: 35px;
-}
-
-.current-token-small {
     font-size: 35px;
-    font-weight: bold;
-    margin: 15px 0;
-}
-
-.waiting-message {
-    margin-top: 20px;
-}
-
-.your-turn {
-    font-size: 24px;
-    font-weight: bold;
-    margin-top: 25px;
-}
-
-.served-message {
-    font-size: 20px;
-    margin-top: 25px;
-}
-
-
-/* ADMIN */
-
-.current-card {
-    padding: 35px;
+    font-weight: 800;
+    margin: 10px 0;
 }
 
 .current-token {
     font-size: 55px;
-    font-weight: bold;
+    font-weight: 800;
     margin: 20px 0;
 }
 
-.next-button {
-    font-size: 18px;
-    padding: 15px 40px;
+.current-token-small {
+    font-size: 35px;
+    font-weight: 800;
+    margin: 15px 0;
 }
+
+.your-turn {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 10px;
+    background: #dcfce7;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.served-message {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    font-weight: bold;
+}
+
+.waiting-message {
+    margin-top: 20px;
+    color: #6b7280;
+}
+
+
+/* ADMIN */
 
 table {
     width: 100%;
@@ -133,31 +319,24 @@ table {
 
 th,
 td {
-    padding: 12px;
-    border-bottom: 1px solid #ddd;
+    padding: 14px 10px;
+    border-bottom: 1px solid #e5e7eb;
     text-align: center;
 }
 
 th {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.next-button {
+    padding: 14px 30px;
+    border: none;
+    border-radius: 8px;
+    background: #111827;
+    color: white;
     font-weight: bold;
-}
-
-
-/* LOGIN */
-
-.login-card {
-    width: 350px;
-}
-
-.login-button {
-    margin-top: 10px;
-    width: 90%;
-}
-
-.error-message {
-    padding: 10px;
-    margin: 15px 0;
-    border-radius: 5px;
+    cursor: pointer;
 }
 
 .logout-container {
@@ -166,4 +345,70 @@ th {
 
 .logout-container a {
     text-decoration: none;
+}
+
+
+/* LOGIN */
+
+.login-card {
+    width: 400px;
+}
+
+.login-card input {
+    margin-bottom: 12px;
+}
+
+.login-button {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #111827;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 800px) {
+
+    .header {
+        padding: 20px 5%;
+    }
+
+    .header-text {
+        display: none;
+    }
+
+    .hero {
+        width: 90%;
+        padding: 45px 0;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 35px;
+    }
+
+    .hero h1 {
+        font-size: 42px;
+    }
+
+    .hero-description {
+        font-size: 16px;
+    }
+
+    .info-panel {
+        width: 100%;
+    }
+
+    .queue-card {
+        max-width: 100%;
+    }
+
+    footer {
+        padding: 20px 5%;
+    }
+
 }

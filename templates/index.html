@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Smart Queue Management System</title>
+    <title>Smart Queue</title>
 
     <link
         rel="stylesheet"
@@ -21,86 +21,181 @@
 
 <body>
 
-    <div class="container">
+    <div class="page">
 
-        <h1>Smart Queue Management System</h1>
+        <!-- HEADER -->
 
-        <p>Join the queue without waiting in line.</p>
+        <header class="header">
+
+            <div class="logo">
+                Smart<span>Queue</span>
+            </div>
+
+            <div class="header-text">
+                Queue Management System
+            </div>
+
+        </header>
 
 
-        <div class="queue-card">
+        <!-- MAIN CONTENT -->
 
-            <h2>Join Queue</h2>
+        <main class="hero">
 
-            {% if error %}
+            <div class="hero-content">
 
-                <div class="error-message">
-                    {{ error }}
+                <div class="badge">
+                    SMART QUEUE MANAGEMENT
                 </div>
 
-            {% endif %}
+                <h1>
+                    Skip the line.<br>
+                    <span>Save your time.</span>
+                </h1>
 
-            <form
-                action="/join"
-                method="POST"
-            >
-
-                <label for="name">
-                    Enter your name
-                </label>
-
-                <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Enter your name"
-                    required
-                >
-
-                <button type="submit">
-                    JOIN QUEUE
-                </button>
-
-            </form>
-
-        </div>
+                <p class="hero-description">
+                    Join the queue digitally and track your
+                    position in real time without standing
+                    in a physical line.
+                </p>
 
 
-        {% if token %}
+                <!-- JOIN QUEUE CARD -->
 
-        <div class="token-card">
+                <div class="queue-card">
 
-            <h2>Queue Joined Successfully!</h2>
+                    <h2>
+                        Join the Queue
+                    </h2>
+
+                    <p class="card-description">
+                        Enter your name to get your queue token.
+                    </p>
+
+
+                    {% if error %}
+
+                        <div class="error-message">
+                            {{ error }}
+                        </div>
+
+                    {% endif %}
+
+
+                    <form
+                        action="/join"
+                        method="POST"
+                    >
+
+                        <label for="name">
+                            Your Name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            placeholder="Enter your name"
+                            required
+                            autocomplete="name"
+                        >
+
+                        <button
+                            type="submit"
+                            class="primary-button"
+                        >
+                            JOIN QUEUE
+                            <span>→</span>
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+            <!-- RIGHT SIDE INFORMATION -->
+
+            <div class="info-panel">
+
+                <div class="info-card">
+
+                    <div class="info-icon">
+                        01
+                    </div>
+
+                    <div>
+                        <h3>
+                            Get Your Token
+                        </h3>
+
+                        <p>
+                            Receive a unique token number
+                            when you join.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="info-card">
+
+                    <div class="info-icon">
+                        02
+                    </div>
+
+                    <div>
+                        <h3>
+                            Track Your Position
+                        </h3>
+
+                        <p>
+                            See how many people are ahead
+                            of you in real time.
+                        </p>
+                    </div>
+
+                </div>
+
+
+                <div class="info-card">
+
+                    <div class="info-icon">
+                        03
+                    </div>
+
+                    <div>
+                        <h3>
+                            Know Your Turn
+                        </h3>
+
+                        <p>
+                            Get notified when it is finally
+                            your turn.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </main>
+
+
+        <!-- FOOTER -->
+
+        <footer>
 
             <p>
-                Hello,
-                <strong>{{ name }}</strong>
+                Smart Queue Management System
             </p>
 
-            <p>Your Token Number</p>
-
-            <div class="token">
-                {{ token }}
-            </div>
-
-            <p>People Ahead</p>
-
-            <div class="people-ahead">
-                {{ people_ahead }}
-            </div>
-
-            <p>Please wait for your turn.</p>
-
-            <a
-                href="/status/{{ token }}"
-                class="status-link"
-            >
-                VIEW QUEUE STATUS
+            <a href="/admin">
+                Admin Login
             </a>
 
-        </div>
-
-        {% endif %}
+        </footer>
 
     </div>
 
