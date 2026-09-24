@@ -1,15 +1,49 @@
 body {
     font-family: Arial, sans-serif;
+    background-color: #f4f6f8;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
     text-align: center;
-    margin-top: 100px;
+    margin-top: 80px;
 }
 
 h1 {
+    margin-bottom: 10px;
+}
+
+.queue-card {
+    background-color: white;
+    width: 350px;
+    margin: 30px auto;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.queue-card h2 {
     margin-bottom: 20px;
 }
 
+label {
+    display: block;
+    margin-bottom: 8px;
+}
+
+input {
+    width: 90%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
 button {
-    padding: 10px 20px;
-    font-size: 16px;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
     cursor: pointer;
+    font-size: 16px;
 }
