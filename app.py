@@ -91,7 +91,46 @@ def join_queue():
     connection.close()
 
     return redirect(url_for("queue_status", token=token))
+# -------------------------
+# PUBLIC QUEUE DISPLAY
+# -------------------------
 
+@app.route("/display")
+def public_display():
+
+    return render_template("display.html")
+
+
+@app.route("/api/display")
+def display_status():
+
+    connection = get_db_connection()
+
+    current = connection.execute(
+        """
+        SELECT token, name
+        FROM queue
+        WHERE status = 'Serving'
+        ORDER BY id ASC
+        LIMIT 1
+        """
+    ).fetchone()
+
+    waiting_count = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Waiting'
+        """
+    ).fetchone()[0]
+
+    connection.close()
+
+    return jsonify({
+        "current_token": current["token"] if current else None,
+        "current_name": current["name"] if current else None,
+        "waiting_count": waiting_count
+    })
 
 # -------------------------
 # USER QUEUE STATUS PAGE

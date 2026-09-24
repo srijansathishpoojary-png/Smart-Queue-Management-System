@@ -10,7 +10,7 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Admin Dashboard</title>
+    <title>Admin Dashboard - SmartQueue</title>
 
     <link
         rel="stylesheet"
@@ -21,138 +21,241 @@
 
 <body>
 
-    <div class="container">
+    <div class="admin-page">
 
-        <h1>Admin Dashboard</h1>
+        <!-- HEADER -->
 
-        <p>Queue Management</p>
+        <header class="admin-header">
 
+            <div>
 
-        <!-- LOGOUT -->
+                <div class="admin-logo">
+                    Smart<span>Queue</span>
+                </div>
 
-        <div class="logout-container">
+                <p class="admin-subtitle">
+                    Administration Dashboard
+                </p>
 
-            <a href="/admin/logout">
+            </div>
+
+            <a
+                href="/admin/logout"
+                class="logout-button"
+            >
                 Logout
             </a>
 
-        </div>
+        </header>
 
 
-        <!-- CURRENT TOKEN -->
+        <!-- MAIN -->
 
-        <div class="current-card">
+        <main class="admin-main">
 
-            <h2>Currently Serving</h2>
+            <div class="dashboard-title">
 
-            {% if current %}
+                <div>
 
-                <div class="current-token">
-                    {{ current["token"] }}
+                    <h1>
+                        Queue Dashboard
+                    </h1>
+
+                    <p>
+                        Manage and monitor the current queue.
+                    </p>
+
                 </div>
 
-                <p>
-                    Serving:
-                    <strong>
-                        {{ current["name"] }}
-                    </strong>
-                </p>
+            </div>
 
-            {% else %}
 
-                <div class="current-token">
-                    ---
+            <!-- CURRENTLY SERVING -->
+
+            <section class="serving-card">
+
+                <div>
+
+                    <p class="section-label">
+                        CURRENTLY SERVING
+                    </p>
+
+                    {% if current %}
+
+                        <div class="serving-token">
+                            {{ current["token"] }}
+                        </div>
+
+                        <p class="serving-name">
+                            {{ current["name"] }}
+                        </p>
+
+                    {% else %}
+
+                        <div class="serving-token">
+                            ---
+                        </div>
+
+                        <p class="serving-name">
+                            No one is currently being served
+                        </p>
+
+                    {% endif %}
+
                 </div>
 
-                <p>
-                    No one is currently being served.
-                </p>
 
-            {% endif %}
-
-        </div>
-
-
-        <!-- CALL NEXT -->
-
-        <div class="admin-card">
-
-            <form
-                action="/admin/next"
-                method="POST"
-            >
-
-                <button
-                    type="submit"
-                    class="next-button"
+                <form
+                    action="/admin/next"
+                    method="POST"
                 >
-                    CALL NEXT
-                </button>
 
-            </form>
+                    <button
+                        type="submit"
+                        class="call-next-button"
+                    >
+                        CALL NEXT
+                        <span>→</span>
+                    </button>
 
-        </div>
+                </form>
+
+            </section>
 
 
-        <!-- QUEUE TABLE -->
+            <!-- QUEUE -->
 
-        <div class="admin-card">
+            <section class="queue-section">
 
-            <h2>Queue</h2>
+                <div class="queue-section-header">
 
-            {% if queue %}
+                    <div>
 
-                <table>
+                        <h2>
+                            Queue
+                        </h2>
 
-                    <thead>
+                        <p>
+                            All registered visitors
+                        </p>
 
-                        <tr>
+                    </div>
 
-                            <th>Token</th>
+                </div>
 
-                            <th>Name</th>
 
-                            <th>Status</th>
+                {% if queue %}
 
-                        </tr>
+                    <div class="table-container">
 
-                    </thead>
+                        <table>
 
-                    <tbody>
+                            <thead>
 
-                        {% for person in queue %}
+                                <tr>
 
-                            <tr>
+                                    <th>
+                                        TOKEN
+                                    </th>
 
-                                <td>
-                                    {{ person["token"] }}
-                                </td>
+                                    <th>
+                                        NAME
+                                    </th>
 
-                                <td>
-                                    {{ person["name"] }}
-                                </td>
+                                    <th>
+                                        STATUS
+                                    </th>
 
-                                <td>
-                                    {{ person["status"] }}
-                                </td>
+                                </tr>
 
-                            </tr>
+                            </thead>
 
-                        {% endfor %}
+                            <tbody>
 
-                    </tbody>
+                                {% for person in queue %}
 
-                </table>
+                                    <tr>
 
-            {% else %}
+                                        <td class="token-cell">
+                                            {{ person["token"] }}
+                                        </td>
 
-                <p>
-                    No one is currently in the queue.
-                </p>
+                                        <td>
+                                            {{ person["name"] }}
+                                        </td>
 
-            {% endif %}
+                                        <td>
 
-        </div>
+                                            {% if person["status"] == "Waiting" %}
+
+                                                <span class="status-badge waiting">
+                                                    Waiting
+                                                </span>
+
+                                            {% elif person["status"] == "Serving" %}
+
+                                                <span class="status-badge serving">
+                                                    Serving
+                                                </span>
+
+                                            {% elif person["status"] == "Served" %}
+
+                                                <span class="status-badge served">
+                                                    Served
+                                                </span>
+
+                                            {% endif %}
+
+                                        </td>
+
+                                    </tr>
+
+                                {% endfor %}
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                {% else %}
+
+                    <div class="empty-queue">
+
+                        <div class="empty-icon">
+                            —
+                        </div>
+
+                        <h3>
+                            Queue is empty
+                        </h3>
+
+                        <p>
+                            No visitors have joined the queue yet.
+                        </p>
+
+                    </div>
+
+                {% endif %}
+
+            </section>
+
+        </main>
+
+
+        <!-- FOOTER -->
+
+        <footer class="admin-footer">
+
+            <p>
+                Smart Queue Management System
+            </p>
+
+            <p>
+                Admin Panel
+            </p>
+
+        </footer>
 
     </div>
 

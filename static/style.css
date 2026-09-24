@@ -10,7 +10,9 @@ body {
 }
 
 
-/* PAGE */
+/* =========================================
+   USER HOME PAGE
+   ========================================= */
 
 .page {
     min-height: 100vh;
@@ -238,7 +240,9 @@ footer a {
 }
 
 
-/* TOKEN / STATUS PAGES */
+/* =========================================
+   USER STATUS PAGE
+   ========================================= */
 
 .container {
     width: 90%;
@@ -249,8 +253,6 @@ footer a {
 
 .status-card,
 .token-card,
-.admin-card,
-.current-card,
 .login-card {
     background: white;
     width: 500px;
@@ -272,12 +274,6 @@ footer a {
     font-size: 35px;
     font-weight: 800;
     margin: 10px 0;
-}
-
-.current-token {
-    font-size: 55px;
-    font-weight: 800;
-    margin: 20px 0;
 }
 
 .current-token-small {
@@ -309,53 +305,265 @@ footer a {
 }
 
 
-/* ADMIN */
+/* =========================================
+   ADMIN DASHBOARD
+   ========================================= */
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
+.admin-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-th,
-td {
-    padding: 14px 10px;
+
+/* ADMIN HEADER */
+
+.admin-header {
+    background: white;
     border-bottom: 1px solid #e5e7eb;
-    text-align: center;
+    padding: 22px 7%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
-th {
+.admin-logo {
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.admin-logo span {
+    font-weight: 400;
+}
+
+.admin-subtitle {
+    margin: 4px 0 0;
     font-size: 13px;
     color: #6b7280;
 }
 
-.next-button {
-    padding: 14px 30px;
-    border: none;
+.logout-button {
+    text-decoration: none;
+    padding: 10px 18px;
+    border: 1px solid #d1d5db;
     border-radius: 8px;
+    color: #374151;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.logout-button:hover {
+    background: #f9fafb;
+}
+
+
+/* ADMIN MAIN */
+
+.admin-main {
+    width: 86%;
+    max-width: 1200px;
+    margin: auto;
+    padding: 50px 0;
+}
+
+.dashboard-title {
+    margin-bottom: 30px;
+}
+
+.dashboard-title h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+    letter-spacing: -1px;
+}
+
+.dashboard-title p {
+    margin: 0;
+    color: #6b7280;
+}
+
+
+/* CURRENTLY SERVING */
+
+.serving-card {
     background: #111827;
     color: white;
+    border-radius: 18px;
+    padding: 35px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    margin-bottom: 35px;
+}
+
+.section-label {
+    margin: 0 0 12px;
+    font-size: 12px;
+    letter-spacing: 1.5px;
     font-weight: bold;
+    opacity: 0.65;
+}
+
+.serving-token {
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.serving-name {
+    margin: 10px 0 0;
+    font-size: 18px;
+    opacity: 0.8;
+}
+
+.call-next-button {
+    padding: 16px 25px;
+    border: none;
+    border-radius: 9px;
+    background: white;
+    color: #111827;
+    font-size: 14px;
+    font-weight: 800;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
-.logout-container {
-    margin: 15px;
-}
-
-.logout-container a {
-    text-decoration: none;
+.call-next-button:hover {
+    opacity: 0.9;
 }
 
 
-/* LOGIN */
+/* QUEUE SECTION */
+
+.queue-section {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.queue-section-header {
+    padding: 25px 30px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.queue-section-header h2 {
+    margin: 0 0 5px;
+    font-size: 20px;
+}
+
+.queue-section-header p {
+    margin: 0;
+    font-size: 13px;
+    color: #6b7280;
+}
+
+
+/* TABLE */
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    padding: 15px 30px;
+    background: #f9fafb;
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: #6b7280;
+}
+
+td {
+    padding: 18px 30px;
+    border-top: 1px solid #f0f0f0;
+    text-align: left;
+    font-size: 14px;
+}
+
+.token-cell {
+    font-weight: 800;
+    font-size: 15px;
+}
+
+
+/* STATUS BADGES */
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status-badge.waiting {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-badge.serving {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-badge.served {
+    background: #f3f4f6;
+    color: #6b7280;
+}
+
+
+/* EMPTY QUEUE */
+
+.empty-queue {
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.empty-icon {
+    font-size: 35px;
+    color: #9ca3af;
+}
+
+.empty-queue h3 {
+    margin: 10px 0 5px;
+}
+
+.empty-queue p {
+    margin: 0;
+    color: #6b7280;
+}
+
+
+/* ADMIN FOOTER */
+
+.admin-footer {
+    margin-top: auto;
+    padding: 22px 7%;
+    border-top: 1px solid #e5e7eb;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    color: #9ca3af;
+    font-size: 12px;
+}
+
+
+/* =========================================
+   LOGIN
+   ========================================= */
 
 .login-card {
     width: 400px;
-}
-
-.login-card input {
-    margin-bottom: 12px;
 }
 
 .login-button {
@@ -371,7 +579,9 @@ th {
 }
 
 
-/* MOBILE */
+/* =========================================
+   MOBILE
+   ========================================= */
 
 @media (max-width: 800px) {
 
@@ -403,12 +613,185 @@ th {
         width: 100%;
     }
 
-    .queue-card {
-        max-width: 100%;
-    }
-
     footer {
         padding: 20px 5%;
+    }
+
+
+    /* ADMIN MOBILE */
+
+    .admin-header {
+        padding: 18px 5%;
+    }
+
+    .admin-main {
+        width: 90%;
+        padding: 35px 0;
+    }
+
+    .dashboard-title h1 {
+        font-size: 27px;
+    }
+
+    .serving-card {
+        padding: 28px;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .serving-token {
+        font-size: 48px;
+    }
+
+    .call-next-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+    th,
+    td {
+        padding: 14px 15px;
+    }
+
+    .admin-footer {
+        padding: 20px 5%;
+    }
+
+}
+/* =========================================
+   PUBLIC QUEUE DISPLAY
+   ========================================= */
+
+.display-page {
+    margin: 0;
+    min-height: 100vh;
+    background: #111827;
+    color: white;
+}
+
+.display-container {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.display-header {
+    padding: 30px 6%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #374151;
+}
+
+.display-logo {
+    font-size: 30px;
+    font-weight: 800;
+}
+
+.display-logo span {
+    font-weight: 400;
+}
+
+.live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.live-indicator span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+}
+
+.display-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 50px 20px;
+}
+
+.display-label {
+    margin: 0 0 20px;
+    font-size: 20px;
+    letter-spacing: 5px;
+    color: #9ca3af;
+    font-weight: bold;
+}
+
+.display-token {
+    font-size: 180px;
+    line-height: 1;
+    font-weight: 900;
+    letter-spacing: -8px;
+}
+
+.display-name {
+    margin-top: 25px;
+    font-size: 32px;
+    color: #d1d5db;
+}
+
+.display-message {
+    margin-top: 35px;
+    font-size: 18px;
+    color: #9ca3af;
+}
+
+.display-footer {
+    margin-top: 70px;
+    width: 100%;
+    max-width: 800px;
+    padding-top: 25px;
+    border-top: 1px solid #374151;
+    display: flex;
+    justify-content: space-between;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.display-footer span {
+    color: white;
+    font-weight: bold;
+}
+
+
+/* DISPLAY MOBILE */
+
+@media (max-width: 700px) {
+
+    .display-header {
+        padding: 22px 5%;
+    }
+
+    .display-logo {
+        font-size: 24px;
+    }
+
+    .display-token {
+        font-size: 110px;
+        letter-spacing: -5px;
+    }
+
+    .display-name {
+        font-size: 24px;
+    }
+
+    .display-label {
+        font-size: 15px;
+        letter-spacing: 3px;
+    }
+
+    .display-footer {
+        flex-direction: column;
+        gap: 12px;
     }
 
 }

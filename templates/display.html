@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>SmartQueue - Display</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body class="display-page">
+
+    <div class="display-container">
+
+        <header class="display-header">
+
+            <div class="display-logo">
+                Smart<span>Queue</span>
+            </div>
+
+            <div class="live-indicator">
+                <span></span>
+                LIVE
+            </div>
+
+        </header>
+
+
+        <main class="display-main">
+
+            <p class="display-label">
+                NOW SERVING
+            </p>
+
+
+            <div
+                id="current-token"
+                class="display-token"
+            >
+                ---
+            </div>
+
+
+            <div
+                id="current-name"
+                class="display-name"
+            >
+                Please wait
+            </div>
+
+
+            <div class="display-message">
+
+                Please proceed to the service counter.
+
+            </div>
+
+
+            <div class="display-footer">
+
+                <div>
+
+                    <span id="waiting-count">
+                        0
+                    </span>
+
+                    people waiting
+
+                </div>
+
+                <div>
+                    Queue updates automatically
+                </div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+    <script>
+
+        function updateDisplay() {
+
+            fetch("/api/display")
+
+                .then(response => response.json())
+
+                .then(data => {
+
+                    const token =
+                        document.getElementById(
+                            "current-token"
+                        );
+
+                    const name =
+                        document.getElementById(
+                            "current-name"
+                        );
+
+                    const waiting =
+                        document.getElementById(
+                            "waiting-count"
+                        );
+
+
+                    if (data.current_token) {
+
+                        token.textContent =
+                            data.current_token;
+
+                        name.textContent =
+                            data.current_name;
+
+                    } else {
+
+                        token.textContent = "---";
+
+                        name.textContent =
+                            "Please wait";
+
+                    }
+
+
+                    waiting.textContent =
+                        data.waiting_count;
+
+                })
+
+                .catch(error => {
+
+                    console.log(
+                        "Unable to update display."
+                    );
+
+                });
+
+        }
+
+
+        // Update immediately
+        updateDisplay();
+
+
+        // Update every 3 seconds
+        setInterval(
+            updateDisplay,
+            3000
+        );
+
+    </script>
+
+</body>
+
+</html>
