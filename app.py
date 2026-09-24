@@ -38,32 +38,51 @@ def home():
 
 @app.route("/join", methods=["POST"])
 def join_queue():
-    name = request.form["name"]
+    name = request.form["name"].strip()
 
     connection = get_db_connection()
 
-    # Count people already in the queue
-    count = connection.execute(
-        "SELECT COUNT(*) FROM queue"
+    # Get the number of people currently waiting
+    waiting_count = connection.execute(
+        "SELECT COUNT(*) FROM queue WHERE status = 'Waiting'"
     ).fetchone()[0]
 
-    # Generate token
-    token_number = count + 1
+    # Generate the next token
+    token_number = waiting_count + 1
     token = f"A{token_number:03d}"
 
-    # Save user to database
+    # Save the user
     connection.execute(
-        "INSERT INTO queue (name, token) VALUES (?, ?)",
-        (name, token)
+        "INSERT INTO queue (name, token, status) VALUES (?, ?, ?)",
+        (name, token, "Waiting")
     )
 
     connection.commit()
+
+    # Calculate people ahead
+    people_ahead = connection.execute(
+        """
+        SELECT COUNT(*)
+        FROM queue
+        WHERE status = 'Waiting'
+        AND id < (
+            SELECT id
+            FROM queue
+            WHERE token = ?
+            ORDER BY id DESC
+            LIMIT 1
+        )
+        """,
+        (token,)
+    ).fetchone()[0]
+
     connection.close()
 
     return render_template(
         "index.html",
         token=token,
-        name=name
+        name=name,
+        people_ahead=people_ahead
     )
 
 
