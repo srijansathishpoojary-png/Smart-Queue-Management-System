@@ -17,7 +17,8 @@ h1 {
 .queue-card,
 .token-card,
 .admin-card,
-.current-card {
+.current-card,
+.login-card {
     background-color: white;
     width: 500px;
     max-width: 90%;
@@ -38,12 +39,13 @@ h1 {
 label {
     display: block;
     margin-bottom: 8px;
+    margin-top: 15px;
 }
 
 input {
     width: 90%;
     padding: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 5px;
     box-sizing: border-box;
@@ -74,7 +76,7 @@ button:hover {
 }
 
 
-/* ADMIN PAGE */
+/* ADMIN */
 
 .current-card {
     padding: 35px;
@@ -106,4 +108,35 @@ td {
 
 th {
     font-weight: bold;
+}
+
+
+/* LOGIN */
+
+.login-card {
+    width: 350px;
+}
+
+.login-card h1 {
+    margin-bottom: 10px;
+}
+
+.login-button {
+    margin-top: 10px;
+    width: 90%;
+}
+
+.error-message {
+    background-color: #ffe5e5;
+    padding: 10px;
+    margin: 15px 0;
+    border-radius: 5px;
+}
+
+.logout-container {
+    margin: 15px;
+}
+
+.logout-container a {
+    text-decoration: none;
 }

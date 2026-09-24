@@ -2,12 +2,21 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Admin Dashboard</title>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
 </head>
 
 <body>
@@ -17,6 +26,17 @@
         <h1>Admin Dashboard</h1>
 
         <p>Queue Management</p>
+
+
+        <!-- LOGOUT -->
+
+        <div class="logout-container">
+
+            <a href="/admin/logout">
+                Logout
+            </a>
+
+        </div>
 
 
         <!-- CURRENT TOKEN -->
@@ -32,7 +52,10 @@
                 </div>
 
                 <p>
-                    Serving: <strong>{{ current["name"] }}</strong>
+                    Serving:
+                    <strong>
+                        {{ current["name"] }}
+                    </strong>
                 </p>
 
             {% else %}
@@ -41,18 +64,23 @@
                     ---
                 </div>
 
-                <p>No one is currently being served.</p>
+                <p>
+                    No one is currently being served.
+                </p>
 
             {% endif %}
 
         </div>
 
 
-        <!-- CALL NEXT BUTTON -->
+        <!-- CALL NEXT -->
 
         <div class="admin-card">
 
-            <form action="/admin/next" method="POST">
+            <form
+                action="/admin/next"
+                method="POST"
+            >
 
                 <button
                     type="submit"
@@ -74,47 +102,53 @@
 
             {% if queue %}
 
-            <table>
+                <table>
 
-                <thead>
+                    <thead>
 
-                    <tr>
-                        <th>Token</th>
-                        <th>Name</th>
-                        <th>Status</th>
-                    </tr>
+                        <tr>
 
-                </thead>
+                            <th>Token</th>
 
-                <tbody>
+                            <th>Name</th>
 
-                    {% for person in queue %}
+                            <th>Status</th>
 
-                    <tr>
+                        </tr>
 
-                        <td>
-                            {{ person["token"] }}
-                        </td>
+                    </thead>
 
-                        <td>
-                            {{ person["name"] }}
-                        </td>
+                    <tbody>
 
-                        <td>
-                            {{ person["status"] }}
-                        </td>
+                        {% for person in queue %}
 
-                    </tr>
+                            <tr>
 
-                    {% endfor %}
+                                <td>
+                                    {{ person["token"] }}
+                                </td>
 
-                </tbody>
+                                <td>
+                                    {{ person["name"] }}
+                                </td>
 
-            </table>
+                                <td>
+                                    {{ person["status"] }}
+                                </td>
+
+                            </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
 
             {% else %}
 
-            <p>No one is currently in the queue.</p>
+                <p>
+                    No one is currently in the queue.
+                </p>
 
             {% endif %}
 

@@ -1,10 +1,17 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for, session
 import sqlite3
 import os
 
 app = Flask(__name__)
 
+# Secret key used for login sessions
+app.secret_key = "smart-queue-secret-key"
+
 DATABASE = "database/queue.db"
+
+# Demo admin credentials
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin123"
 
 
 def get_db_connection():
@@ -57,7 +64,7 @@ def join_queue():
 
     connection = get_db_connection()
 
-    # Find the highest token number that has ever been created
+    # Find the last token created
     last_token = connection.execute(
         """
         SELECT token
@@ -75,6 +82,7 @@ def join_queue():
 
     token = f"A{token_number:03d}"
 
+    # Add user to queue
     connection.execute(
         """
         INSERT INTO queue (name, token, status)
@@ -85,7 +93,7 @@ def join_queue():
 
     connection.commit()
 
-    # Find the newly created user's position
+    # Calculate people ahead
     people_ahead = connection.execute(
         """
         SELECT COUNT(*)
@@ -113,11 +121,15 @@ def join_queue():
 
 
 # -------------------------
-# ADMIN DASHBOARD
+# ADMIN LOGIN
 # -------------------------
 
 @app.route("/admin")
 def admin():
+
+    # If not logged in, show login page
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
 
     connection = get_db_connection()
 
@@ -129,7 +141,6 @@ def admin():
         """
     ).fetchall()
 
-    # Find the person currently being served
     current = connection.execute(
         """
         SELECT *
@@ -150,15 +161,61 @@ def admin():
 
 
 # -------------------------
+# ADMIN LOGIN PAGE
+# -------------------------
+
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+
+    error = None
+
+    if request.method == "POST":
+
+        username = request.form["username"].strip()
+        password = request.form["password"]
+
+        if (
+            username == ADMIN_USERNAME
+            and password == ADMIN_PASSWORD
+        ):
+            session["admin_logged_in"] = True
+
+            return redirect(url_for("admin"))
+
+        error = "Invalid username or password."
+
+    return render_template(
+        "login.html",
+        error=error
+    )
+
+
+# -------------------------
+# ADMIN LOGOUT
+# -------------------------
+
+@app.route("/admin/logout")
+def admin_logout():
+
+    session.pop("admin_logged_in", None)
+
+    return redirect(url_for("admin_login"))
+
+
+# -------------------------
 # CALL NEXT
 # -------------------------
 
 @app.route("/admin/next", methods=["POST"])
 def call_next():
 
+    # Prevent unauthorized access
+    if not session.get("admin_logged_in"):
+        return redirect(url_for("admin_login"))
+
     connection = get_db_connection()
 
-    # Check whether someone is already being served
+    # Find current serving person
     current = connection.execute(
         """
         SELECT *
@@ -169,8 +226,7 @@ def call_next():
         """
     ).fetchone()
 
-    # If someone is currently being served,
-    # mark them as Served first.
+    # Mark current person as served
     if current:
 
         connection.execute(
@@ -182,7 +238,7 @@ def call_next():
             (current["id"],)
         )
 
-    # Find the next waiting person
+    # Find next waiting person
     next_person = connection.execute(
         """
         SELECT *
@@ -193,7 +249,7 @@ def call_next():
         """
     ).fetchone()
 
-    # Make the next person the current person
+    # Mark next person as serving
     if next_person:
 
         connection.execute(
@@ -216,7 +272,7 @@ def call_next():
         """
     ).fetchall()
 
-    # Get current person
+    # Get current serving person
     current = connection.execute(
         """
         SELECT *
