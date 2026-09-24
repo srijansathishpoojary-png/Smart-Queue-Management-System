@@ -37,7 +37,7 @@ def initialize_database():
 
 
 # -------------------------
-# USER PAGE
+# USER HOME PAGE
 # -------------------------
 
 @app.route("/")
@@ -62,6 +62,7 @@ def join_queue():
 
     connection = get_db_connection()
 
+    # Find the last token created
     last_token = connection.execute(
         """
         SELECT token
@@ -79,7 +80,8 @@ def join_queue():
 
     token = f"A{token_number:03d}"
 
-    cursor = connection.execute(
+    # Add the user to the queue
+    connection.execute(
         """
         INSERT INTO queue (name, token, status)
         VALUES (?, ?, ?)
@@ -87,39 +89,13 @@ def join_queue():
         (name, token, "Waiting")
     )
 
-    user_id = cursor.lastrowid
-
     connection.commit()
-
-    people_ahead = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Waiting'
-        AND id < ?
-        """,
-        (user_id,)
-    ).fetchone()[0]
-
-    current = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
-
     connection.close()
 
-    return render_template(
-        "index.html",
-        token=token,
-        name=name,
-        people_ahead=people_ahead,
-        current=current
-    )
+    # IMPORTANT:
+    # Redirect instead of rendering the page directly.
+    # This prevents refresh from submitting the form again.
+    return redirect(url_for("queue_status", token=token))
 
 
 # -------------------------
@@ -142,6 +118,10 @@ def queue_status(token):
         (token,)
     ).fetchone()
 
+    if not person:
+        connection.close()
+        return "Token not found", 404
+
     current = connection.execute(
         """
         SELECT *
@@ -154,7 +134,7 @@ def queue_status(token):
 
     people_ahead = 0
 
-    if person and person["status"] == "Waiting":
+    if person["status"] == "Waiting":
 
         people_ahead = connection.execute(
             """
@@ -168,9 +148,6 @@ def queue_status(token):
 
     connection.close()
 
-    if not person:
-        return "Token not found", 404
-
     return render_template(
         "status.html",
         person=person,
@@ -180,7 +157,7 @@ def queue_status(token):
 
 
 # -------------------------
-# ADMIN LOGIN
+# ADMIN DASHBOARD
 # -------------------------
 
 @app.route("/admin")
@@ -219,7 +196,7 @@ def admin():
 
 
 # -------------------------
-# ADMIN LOGIN PAGE
+# ADMIN LOGIN
 # -------------------------
 
 @app.route("/admin/login", methods=["GET", "POST"])
@@ -272,6 +249,7 @@ def call_next():
 
     connection = get_db_connection()
 
+    # Find current serving person
     current = connection.execute(
         """
         SELECT *
@@ -282,6 +260,7 @@ def call_next():
         """
     ).fetchone()
 
+    # Mark current person as served
     if current:
 
         connection.execute(
@@ -293,6 +272,7 @@ def call_next():
             (current["id"],)
         )
 
+    # Find next waiting person
     next_person = connection.execute(
         """
         SELECT *
@@ -303,6 +283,7 @@ def call_next():
         """
     ).fetchone()
 
+    # Mark next person as serving
     if next_person:
 
         connection.execute(
@@ -315,33 +296,15 @@ def call_next():
         )
 
     connection.commit()
-
-    queue = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        ORDER BY id ASC
-        """
-    ).fetchall()
-
-    current = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
-
     connection.close()
 
-    return render_template(
-        "admin.html",
-        queue=queue,
-        current=current
-    )
+    # Redirect instead of rendering directly.
+    return redirect(url_for("admin"))
 
+
+# -------------------------
+# RUN APPLICATION
+# -------------------------
 
 if __name__ == "__main__":
     initialize_database()
