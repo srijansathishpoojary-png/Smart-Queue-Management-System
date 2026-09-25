@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
     <meta charset="UTF-8">
 
     <meta
@@ -15,13 +16,18 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='style.css') }}"
     >
+
 </head>
+
 
 <body>
 
     <div class="admin-login-page">
 
-        <!-- LEFT SIDE -->
+
+        <!-- =========================================
+             LEFT SIDE — BRANDING
+        ========================================== -->
 
         <div class="admin-login-brand">
 
@@ -29,22 +35,26 @@
                 Smart<span>Queue</span>
             </div>
 
+
             <div class="admin-brand-content">
 
                 <div class="admin-badge">
                     ADMIN PORTAL
                 </div>
 
+
                 <h1>
                     Manage your queue.
                     <span>Effortlessly.</span>
                 </h1>
+
 
                 <p>
                     Control customer queues, monitor waiting
                     customers and manage service flow from
                     one simple dashboard.
                 </p>
+
 
                 <div class="admin-features">
 
@@ -53,10 +63,12 @@
                         <span>Manage Queue</span>
                     </div>
 
+
                     <div>
                         <strong>02</strong>
                         <span>Serve Customers</span>
                     </div>
+
 
                     <div>
                         <strong>03</strong>
@@ -70,11 +82,17 @@
         </div>
 
 
-        <!-- RIGHT SIDE -->
+
+        <!-- =========================================
+             RIGHT SIDE — LOGIN
+        ========================================== -->
 
         <div class="admin-login-section">
 
             <div class="admin-login-card">
+
+
+                <!-- BACK TO HOME -->
 
                 <a
                     href="/"
@@ -83,18 +101,30 @@
                     ← Back to SmartQueue
                 </a>
 
+
+
+                <!-- LOGIN ICON -->
+
                 <div class="admin-login-icon">
                     🔐
                 </div>
+
+
+
+                <!-- TITLE -->
 
                 <h2>
                     Welcome back
                 </h2>
 
+
                 <p class="admin-login-description">
                     Sign in to access the admin dashboard.
                 </p>
 
+
+
+                <!-- ERROR MESSAGE -->
 
                 {% if error %}
 
@@ -105,16 +135,30 @@
                 {% endif %}
 
 
+
+                <!-- =================================
+                     LOGIN FORM
+
+                     IMPORTANT:
+                     This MUST submit to /admin/login
+                     because that is the POST route
+                     in app.py.
+                ================================== -->
+
                 <form
-                    action="/admin"
+                    action="/admin/login"
                     method="POST"
                 >
+
+
+                    <!-- USERNAME -->
 
                     <div class="login-field">
 
                         <label for="username">
                             Username
                         </label>
+
 
                         <input
                             type="text"
@@ -128,11 +172,15 @@
                     </div>
 
 
+
+                    <!-- PASSWORD -->
+
                     <div class="login-field">
 
                         <label for="password">
                             Password
                         </label>
+
 
                         <input
                             type="password"
@@ -146,24 +194,38 @@
                     </div>
 
 
+
+                    <!-- LOGIN BUTTON -->
+
                     <button
                         type="submit"
                         class="admin-login-button"
                     >
+
                         SIGN IN
-                        <span>→</span>
+
+                        <span>
+                            →
+                        </span>
+
                     </button>
+
 
                 </form>
 
+
+
+                <!-- FOOTER -->
 
                 <div class="admin-login-footer">
                     Smart Queue Management System
                 </div>
 
+
             </div>
 
         </div>
+
 
     </div>
 
