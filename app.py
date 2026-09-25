@@ -1,83 +1,136 @@
-from flask import Flask, render_template, request, redirect, url_for, session, jsonify
-import sqlite3
 import os
 
+from flask import (
+    Flask,
+    render_template,
+    request,
+    redirect,
+    url_for,
+    session,
+    jsonify
+)
+
+from supabase import create_client, Client
+
+
+# =========================================================
+# FLASK APP
+# =========================================================
 
 app = Flask(__name__)
 
-# =========================================
-# FLASK CONFIGURATION
-# =========================================
-
-app.secret_key = "smart_queue_secret_key"
-
-
-# =========================================
-# DATABASE CONFIGURATION
-# =========================================
-
-# Get the folder where app.py is located.
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Database folder
-DATABASE_DIR = os.path.join(BASE_DIR, "database")
-
-# SQLite database file
-DATABASE = os.path.join(DATABASE_DIR, "queue.db")
+# Use an environment variable in production.
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "smart_queue_secret_key"
+)
 
 
-# =========================================
-# DATABASE INITIALIZATION
-# =========================================
+# =========================================================
+# SUPABASE CONFIGURATION
+# =========================================================
 
-def init_db():
-    """
-    Create the database directory and queue
-    table if they do not already exist.
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_SECRET_KEY")
 
-    This is important for deployment on Render.
-    """
-
-    # Make sure the database folder exists.
-    os.makedirs(DATABASE_DIR, exist_ok=True)
-
-    connection = sqlite3.connect(DATABASE)
-
-    connection.execute(
-        """
-        CREATE TABLE IF NOT EXISTS queue (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            token TEXT NOT NULL,
-            status TEXT NOT NULL DEFAULT 'Waiting'
-        )
-        """
+if not SUPABASE_URL:
+    raise RuntimeError(
+        "SUPABASE_URL environment variable is not configured."
     )
 
-    connection.commit()
-    connection.close()
+if not SUPABASE_KEY:
+    raise RuntimeError(
+        "SUPABASE_SECRET_KEY environment variable is not configured."
+    )
 
 
-def get_db_connection():
+supabase: Client = create_client(
+    SUPABASE_URL,
+    SUPABASE_KEY
+)
+
+
+# =========================================================
+# HELPER FUNCTIONS
+# =========================================================
+
+def get_queue():
     """
-    Open a connection to the SQLite database.
+    Return the complete queue ordered by ID.
     """
 
-    connection = sqlite3.connect(DATABASE)
+    response = (
+        supabase
+        .table("queue")
+        .select("*")
+        .order("id", desc=False)
+        .execute()
+    )
 
-    # Allows us to access columns by name.
-    connection.row_factory = sqlite3.Row
-
-    return connection
+    return response.data or []
 
 
-# Initialize the database when Flask starts.
-init_db()
+def get_person_by_token(token):
+    """
+    Find a queue person by token.
+    """
+
+    response = (
+        supabase
+        .table("queue")
+        .select("*")
+        .eq("token", token)
+        .limit(1)
+        .execute()
+    )
+
+    if response.data:
+        return response.data[0]
+
+    return None
 
 
-# =========================================
+def get_current_serving():
+    """
+    Return the first currently serving person.
+    """
+
+    response = (
+        supabase
+        .table("queue")
+        .select("*")
+        .eq("status", "Serving")
+        .order("id", desc=False)
+        .limit(1)
+        .execute()
+    )
+
+    if response.data:
+        return response.data[0]
+
+    return None
+
+
+def get_waiting_people():
+    """
+    Return all waiting people in queue order.
+    """
+
+    response = (
+        supabase
+        .table("queue")
+        .select("*")
+        .eq("status", "Waiting")
+        .order("id", desc=False)
+        .execute()
+    )
+
+    return response.data or []
+
+
+# =========================================================
 # HOME PAGE
-# =========================================
+# =========================================================
 
 @app.route("/")
 def home():
@@ -87,168 +140,216 @@ def home():
     )
 
 
-# =========================================
+# =========================================================
 # JOIN QUEUE
-# =========================================
+# =========================================================
 
 @app.route("/join", methods=["POST"])
 def join_queue():
 
-    name = request.form.get("name")
+    name = request.form.get("name", "").strip()
 
-    # Validate name.
-    if not name or not name.strip():
+    if not name:
 
         return render_template(
             "index.html",
             error="Please enter your name."
         )
 
-    name = name.strip()
 
-    connection = get_db_connection()
+    try:
 
-    # Make absolutely sure the table exists.
-    init_db()
+        # -------------------------------------------------
+        # Insert first so Postgres generates the ID.
+        # -------------------------------------------------
 
-    # Get the last token number.
-    last_person = connection.execute(
-        """
-        SELECT token
-        FROM queue
-        ORDER BY id DESC
-        LIMIT 1
-        """
-    ).fetchone()
+        insert_response = (
+            supabase
+            .table("queue")
+            .insert({
+                "name": name,
+                "status": "Waiting"
+            })
+            .select("id")
+            .execute()
+        )
 
-    if last_person:
+        if not insert_response.data:
 
-        last_token = last_person["token"]
-
-        try:
-
-            last_number = int(
-                last_token.replace("A", "")
+            return render_template(
+                "index.html",
+                error="Unable to join the queue. Please try again."
             )
 
-        except ValueError:
 
-            last_number = 0
+        row_id = insert_response.data[0]["id"]
 
-    else:
 
-        last_number = 0
+        # -------------------------------------------------
+        # Generate token from the database ID.
+        #
+        # Example:
+        # 1  -> A001
+        # 12 -> A012
+        # 105 -> A105
+        # -------------------------------------------------
 
-    # Generate new token.
-    new_number = last_number + 1
+        token = f"A{int(row_id):03d}"
 
-    token = f"A{new_number:03d}"
 
-    # Add person to queue.
-    connection.execute(
-        """
-        INSERT INTO queue
-        (token, name, status)
-        VALUES (?, ?, ?)
-        """,
-        (
-            token,
-            name,
-            "Waiting"
+        # -------------------------------------------------
+        # Save token.
+        # -------------------------------------------------
+
+        supabase \
+            .table("queue") \
+            .update({
+                "token": token
+            }) \
+            .eq("id", row_id) \
+            .execute()
+
+
+        return redirect(
+            url_for(
+                "queue_status",
+                token=token
+            )
         )
-    )
 
-    connection.commit()
 
-    connection.close()
+    except Exception as error:
 
-    # Redirect to user's queue status.
-    return redirect(
-        url_for(
-            "queue_status",
-            token=token
+        print(
+            "JOIN QUEUE ERROR:",
+            error
         )
-    )
+
+        return render_template(
+            "index.html",
+            error="Unable to join the queue. Please try again."
+        )
 
 
-# =========================================
+# =========================================================
 # USER QUEUE STATUS
-# =========================================
+# =========================================================
 
 @app.route("/status/<token>")
 def queue_status(token):
 
-    connection = get_db_connection()
+    try:
 
-    person = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE token = ?
-        """,
-        (token,)
-    ).fetchone()
+        person = get_person_by_token(token)
 
-    if not person:
+        if not person:
 
-        connection.close()
-
-        return "Token not found", 404
-
-    # Count people ahead.
-    people_ahead = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Waiting'
-        AND id < ?
-        """,
-        (person["id"],)
-    ).fetchone()[0]
-
-    # Average service time.
-    average_service_time = 5
-
-    # Estimated waiting time.
-    estimated_wait = (
-        people_ahead * average_service_time
-    )
-
-    # Currently serving.
-    current = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
-
-    connection.close()
-
-    return render_template(
-        "status.html",
-        person=person,
-        people_ahead=people_ahead,
-        current=current,
-        estimated_wait=estimated_wait
-    )
+            return "Token not found", 404
 
 
-# =========================================
+        # -------------------------------------------------
+        # People ahead of this person
+        # -------------------------------------------------
+
+        response = (
+            supabase
+            .table("queue")
+            .select("id")
+            .eq("status", "Waiting")
+            .lt("id", person["id"])
+            .execute()
+        )
+
+        people_ahead = len(
+            response.data or []
+        )
+
+
+        # -------------------------------------------------
+        # Average service time
+        # -------------------------------------------------
+
+        average_service_time = 5
+
+
+        # -------------------------------------------------
+        # Estimated waiting time
+        # -------------------------------------------------
+
+        estimated_wait = (
+            people_ahead *
+            average_service_time
+        )
+
+
+        # -------------------------------------------------
+        # Currently serving
+        # -------------------------------------------------
+
+        current = get_current_serving()
+
+
+        return render_template(
+            "status.html",
+            person=person,
+            people_ahead=people_ahead,
+            current=current,
+            estimated_wait=estimated_wait
+        )
+
+
+    except Exception as error:
+
+        print(
+            "STATUS ERROR:",
+            error
+        )
+
+        return "Unable to load queue status.", 500
+
+
+# =========================================================
 # ADMIN LOGIN
-# =========================================
+# =========================================================
 
-@app.route("/admin/login", methods=["GET", "POST"])
+@app.route(
+    "/admin/login",
+    methods=["GET", "POST"]
+)
 def admin_login():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
 
-        if username == "admin" and password == "admin123":
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+
+        # -------------------------------------------------
+        # Current project admin credentials
+        # -------------------------------------------------
+
+        admin_username = os.environ.get(
+            "ADMIN_USERNAME",
+            "admin"
+        )
+
+        admin_password = os.environ.get(
+            "ADMIN_PASSWORD",
+            "admin123"
+        )
+
+
+        if (
+            username == admin_username
+            and password == admin_password
+        ):
 
             session["admin_logged_in"] = True
 
@@ -256,160 +357,187 @@ def admin_login():
                 url_for("admin")
             )
 
+
         return render_template(
             "admin_login.html",
             error="Invalid username or password."
         )
+
 
     return render_template(
         "admin_login.html"
     )
 
 
-# =========================================
+# =========================================================
 # ADMIN DASHBOARD
-# =========================================
+# =========================================================
 
 @app.route("/admin")
 def admin():
 
-    # Check login.
-    if not session.get("admin_logged_in"):
+    if not session.get(
+        "admin_logged_in"
+    ):
 
         return redirect(
             url_for("admin_login")
         )
 
-    connection = get_db_connection()
 
-    # Get complete queue.
-    queue = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        ORDER BY id ASC
-        """
-    ).fetchall()
+    try:
 
-    # Currently serving.
-    current = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
+        # -------------------------------------------------
+        # Complete queue
+        # -------------------------------------------------
 
-    # Total people.
-    total_people = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        """
-    ).fetchone()[0]
-
-    # Waiting people.
-    waiting_people = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Waiting'
-        """
-    ).fetchone()[0]
-
-    # Serving people.
-    serving_people = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Serving'
-        """
-    ).fetchone()[0]
-
-    # Served people.
-    served_people = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Served'
-        """
-    ).fetchone()[0]
-
-    connection.close()
-
-    return render_template(
-        "admin.html",
-        queue=queue,
-        current=current,
-        total_people=total_people,
-        waiting_people=waiting_people,
-        serving_people=serving_people,
-        served_people=served_people
-    )
+        queue = get_queue()
 
 
-# =========================================
+        # -------------------------------------------------
+        # Currently serving
+        # -------------------------------------------------
+
+        current = get_current_serving()
+
+
+        # -------------------------------------------------
+        # Statistics
+        # -------------------------------------------------
+
+        total_people = len(queue)
+
+        waiting_people = len([
+            person
+            for person in queue
+            if person["status"] == "Waiting"
+        ])
+
+        serving_people = len([
+            person
+            for person in queue
+            if person["status"] == "Serving"
+        ])
+
+        served_people = len([
+            person
+            for person in queue
+            if person["status"] == "Served"
+        ])
+
+
+        return render_template(
+            "admin.html",
+            queue=queue,
+            current=current,
+            total_people=total_people,
+            waiting_people=waiting_people,
+            serving_people=serving_people,
+            served_people=served_people
+        )
+
+
+    except Exception as error:
+
+        print(
+            "ADMIN ERROR:",
+            error
+        )
+
+        return (
+            "Unable to load admin dashboard.",
+            500
+        )
+
+
+# =========================================================
 # CALL NEXT
-# =========================================
+# =========================================================
 
-@app.route("/admin/next", methods=["POST"])
+@app.route(
+    "/admin/next",
+    methods=["POST"]
+)
 def admin_next():
 
-    # Check login.
-    if not session.get("admin_logged_in"):
+    if not session.get(
+        "admin_logged_in"
+    ):
 
         return redirect(
             url_for("admin_login")
         )
 
-    connection = get_db_connection()
 
-    # Mark the current serving person as served.
-    connection.execute(
-        """
-        UPDATE queue
-        SET status = 'Served'
-        WHERE status = 'Serving'
-        """
-    )
+    try:
 
-    # Find the next waiting person.
-    next_person = connection.execute(
-        """
-        SELECT id
-        FROM queue
-        WHERE status = 'Waiting'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
+        # -------------------------------------------------
+        # Mark current serving person as served.
+        # -------------------------------------------------
 
-    # Make next person the serving person.
-    if next_person:
+        supabase \
+            .table("queue") \
+            .update({
+                "status": "Served"
+            }) \
+            .eq("status", "Serving") \
+            .execute()
 
-        connection.execute(
-            """
-            UPDATE queue
-            SET status = 'Serving'
-            WHERE id = ?
-            """,
-            (next_person["id"],)
+
+        # -------------------------------------------------
+        # Find next waiting person.
+        # -------------------------------------------------
+
+        response = (
+            supabase
+            .table("queue")
+            .select("id")
+            .eq("status", "Waiting")
+            .order("id", desc=False)
+            .limit(1)
+            .execute()
         )
 
-    connection.commit()
 
-    connection.close()
+        if response.data:
 
-    return redirect(
-        url_for("admin")
-    )
+            next_id = response.data[0]["id"]
 
 
-# =========================================
+            # -------------------------------------------------
+            # Make next person the serving person.
+            # -------------------------------------------------
+
+            supabase \
+                .table("queue") \
+                .update({
+                    "status": "Serving"
+                }) \
+                .eq("id", next_id) \
+                .execute()
+
+
+        return redirect(
+            url_for("admin")
+        )
+
+
+    except Exception as error:
+
+        print(
+            "CALL NEXT ERROR:",
+            error
+        )
+
+        return (
+            "Unable to call next person.",
+            500
+        )
+
+
+# =========================================================
 # ADMIN LOGOUT
-# =========================================
+# =========================================================
 
 @app.route("/admin/logout")
 def admin_logout():
@@ -421,9 +549,9 @@ def admin_logout():
     )
 
 
-# =========================================
+# =========================================================
 # PUBLIC QUEUE DISPLAY
-# =========================================
+# =========================================================
 
 @app.route("/display")
 def public_display():
@@ -433,151 +561,230 @@ def public_display():
     )
 
 
-# =========================================
+# =========================================================
 # PUBLIC DISPLAY API
-# =========================================
+# =========================================================
 
 @app.route("/api/display")
 def display_status():
 
-    connection = get_db_connection()
+    try:
 
-    # Currently serving.
-    current = connection.execute(
-        """
-        SELECT token, name
-        FROM queue
-        WHERE status = 'Serving'
-        ORDER BY id ASC
-        LIMIT 1
-        """
-    ).fetchone()
+        # -------------------------------------------------
+        # Currently serving
+        # -------------------------------------------------
 
-    # Number of people waiting.
-    waiting_count = connection.execute(
-        """
-        SELECT COUNT(*)
-        FROM queue
-        WHERE status = 'Waiting'
-        """
-    ).fetchone()[0]
-
-    connection.close()
-
-    return jsonify({
-
-        "current_token":
-            current["token"]
-            if current
-            else None,
-
-        "current_name":
-            current["name"]
-            if current
-            else None,
-
-        "waiting_count":
-            waiting_count
-    })
+        current = get_current_serving()
 
 
-# =========================================
+        # -------------------------------------------------
+        # Waiting count
+        # -------------------------------------------------
+
+        waiting_response = (
+            supabase
+            .table("queue")
+            .select("id")
+            .eq("status", "Waiting")
+            .execute()
+        )
+
+        waiting_count = len(
+            waiting_response.data or []
+        )
+
+
+        return jsonify({
+
+            "current_token":
+                current["token"]
+                if current
+                else None,
+
+            "current_name":
+                current["name"]
+                if current
+                else None,
+
+            "waiting_count":
+                waiting_count
+        })
+
+
+    except Exception as error:
+
+        print(
+            "DISPLAY API ERROR:",
+            error
+        )
+
+        return jsonify({
+
+            "current_token": None,
+            "current_name": None,
+            "waiting_count": 0,
+            "error": "Unable to load queue."
+        }), 500
+
+
+# =========================================================
 # QUEUE HISTORY
-# =========================================
+# =========================================================
 
 @app.route("/admin/history")
 def admin_history():
 
-    # Check login.
-    if not session.get("admin_logged_in"):
+    if not session.get(
+        "admin_logged_in"
+    ):
 
         return redirect(
             url_for("admin_login")
         )
 
-    connection = get_db_connection()
 
-    history = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE status = 'Served'
-        ORDER BY id DESC
-        """
-    ).fetchall()
+    try:
 
-    connection.close()
+        response = (
+            supabase
+            .table("queue")
+            .select("*")
+            .eq("status", "Served")
+            .order("id", desc=True)
+            .execute()
+        )
 
-    return render_template(
-        "history.html",
-        history=history
-    )
+        history = response.data or []
 
 
-# =========================================
+        return render_template(
+            "history.html",
+            history=history
+        )
+
+
+    except Exception as error:
+
+        print(
+            "HISTORY ERROR:",
+            error
+        )
+
+        return (
+            "Unable to load queue history.",
+            500
+        )
+
+
+# =========================================================
 # CANCEL QUEUE
-# =========================================
+# =========================================================
 
-@app.route("/cancel/<token>", methods=["POST"])
+@app.route(
+    "/cancel/<token>",
+    methods=["POST"]
+)
 def cancel_queue(token):
 
-    connection = get_db_connection()
+    try:
 
-    person = connection.execute(
-        """
-        SELECT *
-        FROM queue
-        WHERE token = ?
-        """,
-        (token,)
-    ).fetchone()
+        person = get_person_by_token(token)
 
-    if not person:
 
-        connection.close()
+        if not person:
 
-        return "Token not found", 404
+            return "Token not found", 404
 
-    # Only waiting users can cancel.
-    if person["status"] == "Waiting":
 
-        connection.execute(
-            """
-            UPDATE queue
-            SET status = 'Cancelled'
-            WHERE token = ?
-            """,
-            (token,)
+        # -------------------------------------------------
+        # Only waiting users can cancel.
+        # -------------------------------------------------
+
+        if person["status"] == "Waiting":
+
+            (
+                supabase
+                .table("queue")
+                .update({
+                    "status": "Cancelled"
+                })
+                .eq("token", token)
+                .execute()
+            )
+
+
+        return redirect(
+            url_for(
+                "queue_status",
+                token=token
+            )
         )
 
-        connection.commit()
 
-    connection.close()
+    except Exception as error:
 
-    return redirect(
-        url_for(
-            "queue_status",
-            token=token
+        print(
+            "CANCEL ERROR:",
+            error
         )
-    )
+
+        return (
+            "Unable to cancel queue.",
+            500
+        )
 
 
-# =========================================
-# APPLICATION START
-# =========================================
+# =========================================================
+# HEALTH CHECK
+# =========================================================
+
+@app.route("/health")
+def health():
+
+    try:
+
+        response = (
+            supabase
+            .table("queue")
+            .select("id")
+            .limit(1)
+            .execute()
+        )
+
+        return jsonify({
+            "status": "ok",
+            "database": "supabase"
+        })
+
+
+    except Exception as error:
+
+        print(
+            "HEALTH CHECK ERROR:",
+            error
+        )
+
+        return jsonify({
+            "status": "error",
+            "database": "supabase"
+        }), 500
+
+
+# =========================================================
+# RUN APPLICATION
+# =========================================================
 
 if __name__ == "__main__":
 
-    # Initialize database again before local startup.
-    init_db()
+    port = int(
+        os.environ.get(
+            "PORT",
+            5000
+        )
+    )
 
     app.run(
         host="0.0.0.0",
-        port=int(
-            os.environ.get(
-                "PORT",
-                5000
-            )
-        ),
+        port=port,
         debug=True
     )
