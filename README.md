@@ -4,7 +4,7 @@ A web-based queue management system built with Python Flask that allows customer
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 Traditional queue systems require customers to physically stand in line and wait for their turn. This can lead to long waiting times, overcrowding, and inconvenience.
 
@@ -14,7 +14,7 @@ The system also provides a public display for showing the currently serving toke
 
 ---
 
-## 🎯 Problem Statement
+##  Problem Statement
 
 Traditional queue management systems have several limitations:
 
@@ -28,7 +28,7 @@ SmartQueue addresses these problems by providing a simple digital queue manageme
 
 ---
 
-## 🎯 Objectives
+##  Objectives
 
 The main objectives of SmartQueue are:
 
@@ -44,9 +44,9 @@ The main objectives of SmartQueue are:
 
 ---
 
-## ✨ Features
+##  Features
 
-### 👤 Customer Features
+###  Customer Features
 
 - Join the queue using their name.
 - Receive an automatically generated token.
@@ -55,7 +55,7 @@ The main objectives of SmartQueue are:
 - Refresh the status page without creating duplicate queue entries.
 - Cancel their queue entry when required.
 
-### 🔐 Administrator Features
+###  Administrator Features
 
 - Secure admin login.
 - View current queue information.
@@ -65,7 +65,7 @@ The main objectives of SmartQueue are:
 - Manage customer queue status.
 - Access the administration dashboard.
 
-### 📺 Public Display
+###  Public Display
 
 - Displays the currently serving token.
 - Shows the customer currently being served.
@@ -73,7 +73,7 @@ The main objectives of SmartQueue are:
 
 ---
 
-## 🧩 System Modules
+##  System Modules
 
 The application is divided into the following major modules:
 
@@ -130,7 +130,7 @@ Responsible for storing:
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 
 The project follows a structure similar to:
 
